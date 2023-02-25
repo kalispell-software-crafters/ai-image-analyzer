@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from src.services.video_service import download_video
-from src.services.yolo_service import run_image_analysis
+from src.services.image_analysis_service import run_image_analysis
 
 app = FastAPI()
 
