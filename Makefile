@@ -20,7 +20,7 @@ REQUIREMENTS_DEV_FILE_TEMP = $(PROJECT_DIR)/requirements-dev.tmp
 REQUIREMENTS_DEPLOYMENT_FILE = $(PROJECT_DIR)/requirements-deploy.txt
 REQUIREMENTS_DEPLOYMENT_FILE_TEMP = $(PROJECT_DIR)/requirements-deploy.tmp
 
-# Directories used for testing and development of the
+# Variable used for turning on/off Docker Buildkit
 DOCKER_BUILDKIT_VALUE=1
 
 # ----------------------------- Python-specific -------------------------------
@@ -65,6 +65,8 @@ show-params:
 	@ echo "REQUIREMENTS_DEV_FILE_TEMP:        $(REQUIREMENTS_DEV_FILE_TEMP)"
 	@ echo "REQUIREMENTS_DEPLOYMENT_FILE:      $(REQUIREMENTS_DEPLOYMENT_FILE)"
 	@ echo "REQUIREMENTS_DEPLOYMENT_FILE_TEMP: $(REQUIREMENTS_DEPLOYMENT_FILE_TEMP)"
+	@ printf "\n-------- DOCKER ---------------\n"
+	@ echo "DOCKER_BUILDKIT_VALUE:             $(DOCKER_BUILDKIT_VALUE)"
 	@ printf "\n-------- PYTHON ---------------\n"
 	@ echo "HAS_CONDA:                         $(HAS_CONDA)"
 	@ echo "HAS_PYENV:                         $(HAS_PYENV)"
