@@ -1,5 +1,4 @@
 [flake8]
-# ignore = E203, E501, W503, F403, C901
 ignore = W503, C901, E203
 max-line-length = 79
 max-complexity = 18
