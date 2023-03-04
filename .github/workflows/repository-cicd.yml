@@ -1,9 +1,6 @@
 name: Project CICD
 run-name: ${{ github.actor }} - CICD
-on:
-  push:
-    branches:
-      - "develop"
+on: [push]
 
 jobs:
   #
