@@ -1,5 +1,6 @@
 from src.services.video_service import download_video
 
+
 def test_download_video():
     mock_url = "url@youtube.com"
 
