@@ -8,6 +8,7 @@ Sample app to count target items within an image or video.
 - [Setup for local code development](#setup-for-local-code-development)
   - [Makefile](#makefile)
   - [Starting up the Docker container and initializing the repository](#starting-up-the-docker-container-and-initializing-the-repository)
+- [Starting the API service](#starting-the-api-service)
 - [Tests](#tests)
 - [Resources](#resources)
 
@@ -165,8 +166,15 @@ the following command:
 make api-web
 ```
 
-This will direct the user to the following URL:
-[http://localhost:8090/docs](http://localhost:8090/docs)
+> This will direct the user to the following URL:
+> [http://localhost:8090/docs](http://localhost:8090/docs)
+
+In order to *stop* the API service, one can run the following command:
+
+```bash
+# Stop the API service
+make api-stop
+```
 
 
 As one customizes the FastAPI with new features and more, these changes
