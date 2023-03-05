@@ -77,9 +77,14 @@ show-params:
 	@ printf "\n-------- PYTHON ---------------\n"
 	@ echo "HAS_CONDA:                         $(HAS_CONDA)"
 	@ echo "HAS_PYENV:                         $(HAS_PYENV)"
+	@ printf "\n-------- LOCAL DEVELOPMENT ---------------\n"
+	@ echo "LOCAL_DEV_DOCKER_PROJECT_NAME:     $(LOCAL_DEV_DOCKER_PROJECT_NAME)"
+	@ echo "LOCAL_DEV_SERVICE_NAME:            $(LOCAL_DEV_SERVICE_NAME)"
 	@ printf "\n-------- API ---------------\n"
 	@ echo "APP_PORT:                          $(APP_PORT)"
 	@ echo "APP_WEBSERVER_URL:                 $(APP_WEBSERVER_URL)"
+	@ echo "API_SERVICE_NAME:                  $(API_SERVICE_NAME)"
+	@ echo "API_DOCKER_PROJECT_NAME:           $(API_DOCKER_PROJECT_NAME)"
 	@ printf "\n-----------------------\n"
 
 ## Initialize the repository for code development
@@ -243,9 +248,7 @@ lint:
 # Docker Commands - Local development                                         #
 ###############################################################################
 
-DOCKER_PROJECT_NAME="$(PROJECT_NAME)_localdev_dind"
-
-
+LOCAL_DEV_DOCKER_PROJECT_NAME="$(PROJECT_NAME)_localdev_dind"
 LOCAL_DEV_SERVICE_NAME="local-dev"
 
 ## Clean Docker images
@@ -256,51 +259,58 @@ docker-prune:
 docker-local-dev-build: docker-prune
 	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
 		docker compose \
-		--project-name $(DOCKER_PROJECT_NAME) \
+		--project-name $(LOCAL_DEV_DOCKER_PROJECT_NAME) \
 		build $(LOCAL_DEV_SERVICE_NAME)
 
 ## Start service for local development
 docker-local-dev-start: docker-local-dev-build docker-local-dev-stop
 	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
-		docker compose up -d $(LOCAL_DEV_SERVICE_NAME)
+		docker compose \
+		--project-name $(LOCAL_DEV_DOCKER_PROJECT_NAME) \
+		up -d $(LOCAL_DEV_SERVICE_NAME)
 
 ## Stop service for local development
 docker-local-dev-stop:
 	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
-		docker compose stop $(LOCAL_DEV_SERVICE_NAME)
+		docker compose \
+		--project-name $(LOCAL_DEV_DOCKER_PROJECT_NAME) \
+		stop $(LOCAL_DEV_SERVICE_NAME)
 	@	$(MAKE) docker-prune
 
 ## Start a shell session into the docker container
 docker-local-dev-login:
 	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
-		docker compose exec \
+		docker compose \
+		--project-name $(LOCAL_DEV_DOCKER_PROJECT_NAME) \
+		exec \
 		$(LOCAL_DEV_SERVICE_NAME) /bin/zsh
 
 ###############################################################################
 # Docker Commands - API-related                                               #
 ###############################################################################
 
+API_DOCKER_PROJECT_NAME="$(PROJECT_NAME)_api"
 API_SERVICE_NAME="api"
 
 ## Build API image
 api-build: docker-prune
 	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
 		docker compose \
-		--project-name $(DOCKER_PROJECT_NAME) \
+		--project-name $(API_DOCKER_PROJECT_NAME) \
 		build $(API_SERVICE_NAME)
 
 ## Start API image container
 api-start: api-stop api-build
 	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
 		docker compose \
-		--project-name $(DOCKER_PROJECT_NAME) \
+		--project-name $(API_DOCKER_PROJECT_NAME) \
 		up -d $(API_SERVICE_NAME)
 
 ## Stop API image container
 api-stop:
 	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
 		docker compose \
-		--project-name $(DOCKER_PROJECT_NAME) \
+		--project-name $(API_DOCKER_PROJECT_NAME) \
 		down $(API_SERVICE_NAME)
 	@	$(MAKE) docker-prune
 
