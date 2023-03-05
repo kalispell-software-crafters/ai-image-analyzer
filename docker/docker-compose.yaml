@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  local-dev:
+    # Building the local image
+    build:
+      context: ../
+      dockerfile: ./docker/image_analyzer.Dockerfile
+    # Running the local image
+    image: "ai-image-analyzer-local-dev"
+    container_name: "ai-image-analyzer-local-dev"
+    environment:
+      DOCKER_BUILDKIT_VALUE: ${DOCKER_BUILDKIT_VALUE}
+    volumes:
+      - ${HOME}/.ssh:/root/.ssh
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ..:/opt/program
+    working_dir: /opt/program
+    command: [ "/bin/sleep", "365d" ]

@@ -1,0 +1,32 @@
+#!/bin/bash
+SESSION=`basename $PWD`
+ENVNAME='ml'
+
+# Creating new session
+tmux -2 new-session -d -s $SESSION `cd $PWD`
+
+# ------ Main window ------
+# Renaming window
+tmux rename-window -t $SESSION:0 main
+# Splitting panes and windows
+tmux split-window -v
+tmux select-pane -t 0
+tmux resize-pane -D 15
+tmux select-pane -t 1
+# Sending commands
+tmux send -t $SESSION:0.1 "cd $PWD; conda activate $ENVNAME; source $SHELL ;clear; htop" ENTER
+#
+# ------ Miscellaneous window ------
+tmux new-window -t $SESSION:1 -n 'misc'
+tmux send -t $SESSION:1.0 "cd $PWD; conda activate $ENVNAME; source $SHELL ; clear;" ENTER
+# ------ Extras window ------
+tmux new-window -t $SESSION:2 -n 'extras'
+tmux send -t $SESSION:2.0 "cd $PWD; conda activate $ENVNAME; source $SHELL ; clear;" ENTER
+# ------ Jupyter window ------
+tmux new-window -t $SESSION:3 -n 'jupyter'
+tmux send -t $SESSION:3.0 "cd $PWD; conda activate $ENVNAME; source $SHELL ; clear;" ENTER
+#
+# Selecting which window to start at
+tmux select-window -t $SESSION:0
+tmux select-pane -t 0
+tmux -2 attach -t $SESSION
