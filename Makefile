@@ -8,7 +8,7 @@ PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME := $(shell basename $(subst -,_,$(PROJECT_DIR)))
 ENVIRONMENT_NAME = $(PROJECT_NAME)
 PYTHON_INTERPRETER = python3
-PIP_INTERPRETER = pip3
+PIP_INTERPRETER = pip
 PYTHON_VERSION = 3.9
 PIP_VERSION = 22.3
 
@@ -74,7 +74,15 @@ show-params:
 
 ## Initialize the repository for code development
 init: clean create-envrc delete-environment create-environment
-ifeq (True,$(HAS_PYENV))
+ifeq (True,$(HAS_CONDA))
+	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) requirements)
+	@ printf "\n\n>>> New Conda environment created. Activate with: \n\t: conda activate $(ENVIRONMENT_NAME)"
+	@ $(MAKE) show-params
+	@ printf "\n\n>>> Project initialized!"
+	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) pre-commit-install )
+	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) lint )
+	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) git-flow-install) || echo "Could not setup Git-flow"
+else
 	@ direnv allow || echo ""
 	@ echo ">>> Continuing installation ..."
 	@ $(MAKE) requirements
@@ -83,14 +91,6 @@ ifeq (True,$(HAS_PYENV))
 	@ $(MAKE) pre-commit-install
 	@ $(MAKE) lint
 	@ ($(MAKE) git-flow-install) || echo "Could not setup Git-flow"
-else ifeq (True,$(HAS_CONDA))
-	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) requirements)
-	@ printf "\n\n>>> New Conda environment created. Activate with: \n\t: conda activate $(ENVIRONMENT_NAME)"
-	@ $(MAKE) show-params
-	@ printf "\n\n>>> Project initialized!"
-	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) pre-commit-install )
-	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) lint )
-	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) git-flow-install) || echo "Could not setup Git-flow"
 endif
 
 ## Remove ALL of the artifacts + Python environments
@@ -177,12 +177,6 @@ else ifeq (True,$(HAS_PYENV))
 	@ echo ">>> New Pyenv environment created: '$(ENVIRONMENT_NAME)'"
 	@ pyenv virtualenvs
 	@ echo
-else
-	$(PYTHON_INTERPRETER) -m $(PIP_INTERPRETER) install -q virtualenv virtualenvwrapper
-	@ echo ">>> Installing virtualenvwrapper if not already installed.\nMake sure the following lines are in shell startup file\n\
-	export WORKON_HOME=$$HOME/.virtualenvs\nexport PROJECT_HOME=$$HOME/Devel\nsource /usr/local/bin/virtualenvwrapper.sh\n"
-	@ bash -c "source `which virtualenvwrapper.sh`;mkvirtualenv $(ENVIRONMENT_NAME) --python=$(PYTHON_VERSION)"
-	@ echo ">>> New virtualenv created. Activate with:\nworkon $(ENVIRONMENT_NAME)"
 endif
 
 ## Deletes the Python environment
@@ -236,9 +230,40 @@ lint:
 
 
 ###############################################################################
-# Serverless Commands                                                         #
+# Docker Commands                                                             #
 ###############################################################################
 
+DOCKER_PROJECT_NAME="$(PROJECT_NAME)_localdev_dind"
+LOCAL_DEVELOPMENT_DIR_PATH="$(PROJECT_DIR)/docker"
+LOCAL_DEV_SERVICE_NAME="local-dev"
+
+## Clean Docker images
+docker-prune:
+	@	docker system prune -f
+
+## Build local development image
+docker-local-dev-build: docker-prune
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(DOCKER_PROJECT_NAME) \
+		build $(LOCAL_DEV_SERVICE_NAME)
+
+## Start service for local development
+docker-local-dev-start: docker-local-dev-build docker-local-dev-stop
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose up -d $(LOCAL_DEV_SERVICE_NAME)
+
+## Stop service for local development
+docker-local-dev-stop:
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose stop $(LOCAL_DEV_SERVICE_NAME)
+	@	$(MAKE) docker-prune
+
+## Start a shell session into the docker container
+docker-local-dev-login:
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose exec \
+		$(LOCAL_DEV_SERVICE_NAME) /bin/zsh
 
 ###############################################################################
 # Self Documenting Commands                                                   #
