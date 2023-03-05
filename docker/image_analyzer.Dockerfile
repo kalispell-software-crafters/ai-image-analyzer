@@ -31,10 +31,14 @@ LABEL Maintainer="Victor Calderon and Travis Craft"
 
 RUN mkdir -p ${HOME_DIR}
 
-COPY ./src ${PROJECT_DIR}
+COPY ./src ${PROJECT_DIR}/src
 COPY ${LOCAL_DEV_DIR}/aliases.sh ${ALIASES_FILE}
 
 COPY ${REQUIREMENTS_FILE} "${HOME_DIR}/${REQUIREMENTS_FILE}"
+
+# ---------------------- EXPOSING PORTS FOR APP -------------------------------
+
+EXPOSE 80
 
 # --------------------- INSTALLING EXTRA PACKAGES -----------------------------
 # --- Updating packages and installing packages at the system-level
@@ -94,3 +98,5 @@ ENV PATH="${PROGRAM_DIR}:${PATH}"
 ENV PYTHONPATH="${PROGRAM_DIR}:${PYTHONPATH}"
 
 WORKDIR ${PROJECT_DIR}
+
+CMD ["uvicorn", "src.api.index:app", "--host", "0.0.0.0","--port", "80"]

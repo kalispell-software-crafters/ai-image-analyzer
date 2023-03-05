@@ -20,8 +20,15 @@ REQUIREMENTS_DEV_FILE_TEMP = $(PROJECT_DIR)/requirements-dev.tmp
 REQUIREMENTS_DEPLOYMENT_FILE = $(PROJECT_DIR)/requirements-deploy.txt
 REQUIREMENTS_DEPLOYMENT_FILE_TEMP = $(PROJECT_DIR)/requirements-deploy.tmp
 
+# -- Docker-related
 # Variable used for turning on/off Docker Buildkit
 DOCKER_BUILDKIT_VALUE=1
+LOCAL_DEVELOPMENT_DIR_PATH="$(PROJECT_DIR)/docker"
+
+# -- App-related
+INPUT_APP_PORT=8090
+OUTPUT_APP_PORT=80
+APP_WEBSERVER_URL="http://localhost:$(INPUT_APP_PORT)"
 
 # ----------------------------- Python-specific -------------------------------
 # - Checking what type of python one is using
@@ -70,6 +77,9 @@ show-params:
 	@ printf "\n-------- PYTHON ---------------\n"
 	@ echo "HAS_CONDA:                         $(HAS_CONDA)"
 	@ echo "HAS_PYENV:                         $(HAS_PYENV)"
+	@ printf "\n-------- API ---------------\n"
+	@ echo "APP_PORT:                          $(APP_PORT)"
+	@ echo "APP_WEBSERVER_URL:                 $(APP_WEBSERVER_URL)"
 	@ printf "\n-----------------------\n"
 
 ## Initialize the repository for code development
@@ -230,11 +240,12 @@ lint:
 
 
 ###############################################################################
-# Docker Commands                                                             #
+# Docker Commands - Local development                                         #
 ###############################################################################
 
 DOCKER_PROJECT_NAME="$(PROJECT_NAME)_localdev_dind"
-LOCAL_DEVELOPMENT_DIR_PATH="$(PROJECT_DIR)/docker"
+
+
 LOCAL_DEV_SERVICE_NAME="local-dev"
 
 ## Clean Docker images
@@ -264,6 +275,38 @@ docker-local-dev-login:
 	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
 		docker compose exec \
 		$(LOCAL_DEV_SERVICE_NAME) /bin/zsh
+
+###############################################################################
+# Docker Commands - API-related                                               #
+###############################################################################
+
+API_SERVICE_NAME="api"
+
+## Build API image
+api-build: docker-prune
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(DOCKER_PROJECT_NAME) \
+		build $(API_SERVICE_NAME)
+
+## Start API image container
+api-start: api-stop api-build
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(DOCKER_PROJECT_NAME) \
+		up -d $(API_SERVICE_NAME)
+
+## Stop API image container
+api-stop:
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(DOCKER_PROJECT_NAME) \
+		down $(API_SERVICE_NAME)
+	@	$(MAKE) docker-prune
+
+## Open API in web browser
+api-web:
+	@	python -m webbrowser "$(APP_WEBSERVER_URL)/docs"
 
 ###############################################################################
 # Self Documenting Commands                                                   #
@@ -306,7 +349,7 @@ help:
 	| LC_ALL='C' sort --ignore-case \
 	| awk -F '---' \
 		-v ncol=$$(tput cols) \
-		-v indent=19 \
+		-v indent=25 \
 		-v col_on="$$(tput setaf 6)" \
 		-v col_off="$$(tput sgr0)" \
 	'{ \
