@@ -8,7 +8,8 @@ Sample app to count target items within an image or video.
 - [Setup for local code development](#setup-for-local-code-development)
   - [Makefile](#makefile)
   - [Starting up the Docker container and initializing the repository](#starting-up-the-docker-container-and-initializing-the-repository)
-- [Starting the API service](#starting-the-api-service)
+  - [Starting the API service](#starting-the-api-service)
+  - [Starting up all the services](#starting-up-all-the-services)
 - [Tests](#tests)
 - [Resources](#resources)
 
@@ -34,7 +35,7 @@ interactive API documentation.
 There are some steps that need to be done prior to being able to
 properly run and develop the code in this repository.
 
-The followign is a list of steps that have to happen prior to starting to
+The following is a list of steps that have to happen prior to starting to
 work / test the pipelines of this repository:
 
 ### Makefile
@@ -50,34 +51,36 @@ One can see all of the available options by:
 
     Available rules:
 
-  api-build                 Build API image
-  api-start                 Start API image container
-  api-stop                  Stop API image container
-  api-web                   Open API in web browser
-  clean                     Removes artifacts from the build stage, and other common Python artifacts.
-  clean-build               Remove build artifacts
-  clean-pyc                 Removes Python file artifacts
-  clean-secrets             Removes secret artifacts - Serverless
-  clean-test                Remove test and coverage artifacts
-  create-environment        Creates the Python environment
-  create-envrc              Set up the envrc file for the project.
-  delete-environment        Deletes the Python environment
-  delete-envrc              Delete the local envrc file of the project
-  destroy                   Remove ALL of the artifacts + Python environments
-  docker-local-dev-build    Build local development image
-  docker-local-dev-login    Start a shell session into the docker container
-  docker-local-dev-start    Start service for local development
-  docker-local-dev-stop     Stop service for local development
-  docker-prune              Clean Docker images
-  git-flow-install          Install git-flow
-  init                      Initialize the repository for code development
-  lint                      Run the 'pre-commit' linting step manually
-  pip-upgrade               Upgrade the version of the 'pip' package
-  pre-commit-install        Installing the pre-commit Git hook
-  pre-commit-uninstall      Uninstall the pre-commit Git hook
-  requirements              Install Python dependencies into the Python environment
-  show-params               Show the set of input parameters
-  sort-requirements         Sort the project packages requirements file
+    all-start                 Starts both the API service and the local development service
+    all-stop                  Stops both the API service and the local development service
+    api-build                 Build API image
+    api-start                 Start API image container
+    api-stop                  Stop API image container
+    api-web                   Open API in web browser
+    clean                     Removes artifacts from the build stage, and other common Python artifacts.
+    clean-build               Remove build artifacts
+    clean-pyc                 Removes Python file artifacts
+    clean-secrets             Removes secret artifacts - Serverless
+    clean-test                Remove test and coverage artifacts
+    create-environment        Creates the Python environment
+    create-envrc              Set up the envrc file for the project.
+    delete-environment        Deletes the Python environment
+    delete-envrc              Delete the local envrc file of the project
+    destroy                   Remove ALL of the artifacts + Python environments
+    docker-local-dev-build    Build local development image
+    docker-local-dev-login    Start a shell session into the docker container
+    docker-local-dev-start    Start service for local development
+    docker-local-dev-stop     Stop service for local development
+    docker-prune              Clean Docker images
+    git-flow-install          Install git-flow
+    init                      Initialize the repository for code development
+    lint                      Run the 'pre-commit' linting step manually
+    pip-upgrade               Upgrade the version of the 'pip' package
+    pre-commit-install        Installing the pre-commit Git hook
+    pre-commit-uninstall      Uninstall the pre-commit Git hook
+    requirements              Install Python dependencies into the Python environment
+    show-params               Show the set of input parameters
+    sort-requirements         Sort the project packages requirements file
 ```
 
 > **NOTE**: If you're using `Windows`, you may have to copy and modify to some
@@ -110,7 +113,7 @@ make docker-local-dev-login
 
 ```bash
 # Log into the container
-➜$:  ai-image-analyzer git:(feature/6-adding-docker-and-local-development) make docker-local-dev-login
+➜$: make docker-local-dev-login
 direnv: error /opt/program/.envrc is blocked. Run `direnv allow` to approve its content
 ```
 > One will see the `direnv` error because `direnv` is installed and one must
@@ -176,9 +179,33 @@ In order to *stop* the API service, one can run the following command:
 make api-stop
 ```
 
-
 As one customizes the FastAPI with new features and more, these changes
 will be automatically displayed in the URL from above.
+
+### Starting up all the services
+
+Similar to the sections from above, one can spin up or spin down all the
+services at once with the help of 2 commands, i.e. `all-start` and `all-stop`.
+
+In order to spin up both the *api* service and that for *local development*,
+one can run:
+
+```bash
+make all-start
+```
+
+This command will execute both services and one will be able to log into the
+container for local development, as well to connect to the API via the
+browser.
+
+Similarly, in order to spin down all of the services, one can simply run:
+
+```bash
+make all-stop
+```
+
+This will stop both services and delete any unused Docker containers.
+
 ## Tests
 
 Unit tests can be found under the `src` folder alongside source code.

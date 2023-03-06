@@ -255,6 +255,14 @@ LOCAL_DEV_SERVICE_NAME="local-dev"
 docker-prune:
 	@	docker system prune -f
 
+## Stops both the API service and the local development service
+all-stop: api-stop docker-local-dev-stop
+	@	echo "All services are down"
+
+## Starts both the API service and the local development service
+all-start: api-start docker-local-dev-start
+	@	echo "All services are up!"
+
 ## Build local development image
 docker-local-dev-build: docker-prune
 	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
