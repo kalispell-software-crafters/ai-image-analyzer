@@ -80,7 +80,7 @@ RUN apt-get update -y && \
 
 # --------------------------- PYTHON-RELATED-LOCAL ----------------------------
 
-RUN pip3 install --upgrade pip && \
+RUN pip install --upgrade pip && \
     python -m pip install -r "${HOME_DIR}/${REQUIREMENTS_FILE}"
 
 # ----------------------------- PYTHON-SPECIFIC -------------------------------

@@ -3,7 +3,7 @@
 alias tmux_create='tmux new -s'        # Creates new tmux session.
 alias tmux_attach='tmux a -t'          # Attaches to an existing tmux session.
 alias     tmux_ls='tmux ls'            # Lists all of the existing tmux sessions.
-alias   tmux_kill="tmux kill-session -t " # Kill a specific Tmux session
+alias   tmux_kill="tmux kill-session -t " # Kill a specific tmux session
 alias        gadd='git add'                # Adds a file / directory to repository
 alias        gcom='git commit -m'          # Commits any changes. Use as: gcom "Test"
 alias          gp='git push origin master' # Pushes changes to 'master'
