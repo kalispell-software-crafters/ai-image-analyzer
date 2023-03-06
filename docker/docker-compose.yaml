@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  # --- Service used for local development
+  local-dev:
+    # Building the local image
+    build:
+      context: ../
+      dockerfile: ./docker/image_analyzer.Dockerfile
+    # Running the local image
+    image: "ai-image-analyzer-local-dev"
+    container_name: "ai-image-analyzer-local-dev"
+    environment:
+      DOCKER_BUILDKIT_VALUE: ${DOCKER_BUILDKIT_VALUE}
+    volumes:
+      - ${HOME}/.ssh:/root/.ssh
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ..:/opt/program
+    working_dir: /opt/program
+    command: [ "/bin/sleep", "365d" ]
+  #
+  # --- Service for running the API locally
+  api:
+    # Building the local image
+    build:
+      context: ../
+      dockerfile: ./docker/image_analyzer.Dockerfile
+    # Running the local image
+    image: "ai-image-analyzer-api"
+    container_name: "ai-image-analyzer-api"
+    volumes:
+      - ..:/opt/ml
+    ports:
+      - ${INPUT_APP_PORT:-80}:${OUTPUT_APP_PORT:-80}
+    working_dir: /opt/ml
+    command:
+      [
+        "uvicorn",
+        "src.api.index:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "80",
+        "--reload",
+        "--reload-dir",
+        "/opt/ml"
+      ]

@@ -8,7 +8,7 @@ PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME := $(shell basename $(subst -,_,$(PROJECT_DIR)))
 ENVIRONMENT_NAME = $(PROJECT_NAME)
 PYTHON_INTERPRETER = python3
-PIP_INTERPRETER = pip3
+PIP_INTERPRETER = pip
 PYTHON_VERSION = 3.9
 PIP_VERSION = 22.3
 
@@ -20,8 +20,15 @@ REQUIREMENTS_DEV_FILE_TEMP = $(PROJECT_DIR)/requirements-dev.tmp
 REQUIREMENTS_DEPLOYMENT_FILE = $(PROJECT_DIR)/requirements-deploy.txt
 REQUIREMENTS_DEPLOYMENT_FILE_TEMP = $(PROJECT_DIR)/requirements-deploy.tmp
 
+# -- Docker-related
 # Variable used for turning on/off Docker Buildkit
 DOCKER_BUILDKIT_VALUE=1
+LOCAL_DEVELOPMENT_DIR_PATH="$(PROJECT_DIR)/docker"
+
+# -- App-related
+INPUT_APP_PORT=8090
+OUTPUT_APP_PORT=80
+APP_WEBSERVER_URL="http://localhost:$(INPUT_APP_PORT)"
 
 # ----------------------------- Python-specific -------------------------------
 # - Checking what type of python one is using
@@ -70,11 +77,27 @@ show-params:
 	@ printf "\n-------- PYTHON ---------------\n"
 	@ echo "HAS_CONDA:                         $(HAS_CONDA)"
 	@ echo "HAS_PYENV:                         $(HAS_PYENV)"
+	@ printf "\n-------- LOCAL DEVELOPMENT ---------------\n"
+	@ echo "LOCAL_DEV_DOCKER_PROJECT_NAME:     $(LOCAL_DEV_DOCKER_PROJECT_NAME)"
+	@ echo "LOCAL_DEV_SERVICE_NAME:            $(LOCAL_DEV_SERVICE_NAME)"
+	@ printf "\n-------- API ---------------\n"
+	@ echo "APP_PORT:                          $(APP_PORT)"
+	@ echo "APP_WEBSERVER_URL:                 $(APP_WEBSERVER_URL)"
+	@ echo "API_SERVICE_NAME:                  $(API_SERVICE_NAME)"
+	@ echo "API_DOCKER_PROJECT_NAME:           $(API_DOCKER_PROJECT_NAME)"
 	@ printf "\n-----------------------\n"
 
 ## Initialize the repository for code development
 init: clean create-envrc delete-environment create-environment
-ifeq (True,$(HAS_PYENV))
+ifeq (True,$(HAS_CONDA))
+	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) requirements)
+	@ printf "\n\n>>> New Conda environment created. Activate with: \n\t: conda activate $(ENVIRONMENT_NAME)"
+	@ $(MAKE) show-params
+	@ printf "\n\n>>> Project initialized!"
+	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) pre-commit-install )
+	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) lint )
+	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) git-flow-install) || echo "Could not setup Git-flow"
+else
 	@ direnv allow || echo ""
 	@ echo ">>> Continuing installation ..."
 	@ $(MAKE) requirements
@@ -83,14 +106,6 @@ ifeq (True,$(HAS_PYENV))
 	@ $(MAKE) pre-commit-install
 	@ $(MAKE) lint
 	@ ($(MAKE) git-flow-install) || echo "Could not setup Git-flow"
-else ifeq (True,$(HAS_CONDA))
-	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) requirements)
-	@ printf "\n\n>>> New Conda environment created. Activate with: \n\t: conda activate $(ENVIRONMENT_NAME)"
-	@ $(MAKE) show-params
-	@ printf "\n\n>>> Project initialized!"
-	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) pre-commit-install )
-	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) lint )
-	@ ($(CONDA_ACTIVATE) $(ENVIRONMENT_NAME) ; $(MAKE) git-flow-install) || echo "Could not setup Git-flow"
 endif
 
 ## Remove ALL of the artifacts + Python environments
@@ -177,12 +192,6 @@ else ifeq (True,$(HAS_PYENV))
 	@ echo ">>> New Pyenv environment created: '$(ENVIRONMENT_NAME)'"
 	@ pyenv virtualenvs
 	@ echo
-else
-	$(PYTHON_INTERPRETER) -m $(PIP_INTERPRETER) install -q virtualenv virtualenvwrapper
-	@ echo ">>> Installing virtualenvwrapper if not already installed.\nMake sure the following lines are in shell startup file\n\
-	export WORKON_HOME=$$HOME/.virtualenvs\nexport PROJECT_HOME=$$HOME/Devel\nsource /usr/local/bin/virtualenvwrapper.sh\n"
-	@ bash -c "source `which virtualenvwrapper.sh`;mkvirtualenv $(ENVIRONMENT_NAME) --python=$(PYTHON_VERSION)"
-	@ echo ">>> New virtualenv created. Activate with:\nworkon $(ENVIRONMENT_NAME)"
 endif
 
 ## Deletes the Python environment
@@ -236,9 +245,86 @@ lint:
 
 
 ###############################################################################
-# Serverless Commands                                                         #
+# Docker Commands - Local development                                         #
 ###############################################################################
 
+LOCAL_DEV_DOCKER_PROJECT_NAME="$(PROJECT_NAME)_localdev_dind"
+LOCAL_DEV_SERVICE_NAME="local-dev"
+
+## Clean Docker images
+docker-prune:
+	@	docker system prune -f
+
+## Stops both the API service and the local development service
+all-stop: api-stop docker-local-dev-stop
+	@	echo "All services are down"
+
+## Starts both the API service and the local development service
+all-start: api-start docker-local-dev-start
+	@	echo "All services are up!"
+
+## Build local development image
+docker-local-dev-build: docker-prune
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(LOCAL_DEV_DOCKER_PROJECT_NAME) \
+		build $(LOCAL_DEV_SERVICE_NAME)
+
+## Start service for local development
+docker-local-dev-start: docker-local-dev-build docker-local-dev-stop
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(LOCAL_DEV_DOCKER_PROJECT_NAME) \
+		up -d $(LOCAL_DEV_SERVICE_NAME)
+
+## Stop service for local development
+docker-local-dev-stop:
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(LOCAL_DEV_DOCKER_PROJECT_NAME) \
+		stop $(LOCAL_DEV_SERVICE_NAME)
+	@	$(MAKE) docker-prune
+
+## Start a shell session into the docker container
+docker-local-dev-login:
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(LOCAL_DEV_DOCKER_PROJECT_NAME) \
+		exec \
+		$(LOCAL_DEV_SERVICE_NAME) /bin/zsh
+
+###############################################################################
+# Docker Commands - API-related                                               #
+###############################################################################
+
+API_DOCKER_PROJECT_NAME="$(PROJECT_NAME)_api"
+API_SERVICE_NAME="api"
+
+## Build API image
+api-build: docker-prune
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(API_DOCKER_PROJECT_NAME) \
+		build $(API_SERVICE_NAME)
+
+## Start API image container
+api-start: api-stop api-build
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(API_DOCKER_PROJECT_NAME) \
+		up -d $(API_SERVICE_NAME)
+
+## Stop API image container
+api-stop:
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(API_DOCKER_PROJECT_NAME) \
+		down $(API_SERVICE_NAME)
+	@	$(MAKE) docker-prune
+
+## Open API in web browser
+api-web:
+	@	python -m webbrowser "$(APP_WEBSERVER_URL)/docs"
 
 ###############################################################################
 # Self Documenting Commands                                                   #
@@ -281,7 +367,7 @@ help:
 	| LC_ALL='C' sort --ignore-case \
 	| awk -F '---' \
 		-v ncol=$$(tput cols) \
-		-v indent=19 \
+		-v indent=25 \
 		-v col_on="$$(tput setaf 6)" \
 		-v col_off="$$(tput sgr0)" \
 	'{ \
