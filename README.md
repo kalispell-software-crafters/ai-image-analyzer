@@ -220,5 +220,12 @@ off the capture mode so that print statements are printed to the console.
 
 ## Resources
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Pytest Documentation](https://docs.pytest.org/en/7.2.x/)
+- [Docker](https://docs.docker.com/reference/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [flake8](https://flake8.pycqa.org/en/latest/)
+- [GitHub Actions](https://docs.github.com/en/actions)
+- [Makefile](https://www.gnu.org/software/make/manual/make.html)
+- [Poetry](https://python-poetry.org/)
+- [Pre-commit](https://pre-commit.com)
+- [Pytest](https://docs.pytest.org/en/7.2.x/)
+- [tmux](https://github.com/tmux/tmux/wiki/Getting-Started)
