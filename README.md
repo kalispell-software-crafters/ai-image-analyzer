@@ -42,7 +42,7 @@ work / test the pipelines of this repository:
 
 The project comes with a `Makefile` (**not supported in Windows!**)
 that can be used for executing commands that will make the interaction
-with this project much smoother.
+with this project much smoother. Keep in mind that folders with spaces in their names may cause issues.
 
 One can see all of the available options by:
 
