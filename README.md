@@ -220,12 +220,17 @@ off the capture mode so that print statements are printed to the console.
 
 ## Resources
 
+- [direnv](https://github.com/direnv/direnv)
 - [Docker](https://docs.docker.com/reference/)
+- [Docker Compose](https://docs.docker.com/compose/)
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [flake8](https://flake8.pycqa.org/en/latest/)
+- [git](https://git-scm.com/)
 - [GitHub Actions](https://docs.github.com/en/actions)
+- [isort](https://pycqa.github.io/isort/index.html)
 - [Makefile](https://www.gnu.org/software/make/manual/make.html)
 - [Poetry](https://python-poetry.org/)
 - [Pre-commit](https://pre-commit.com)
+- [Python](https://www.python.org/)
 - [Pytest](https://docs.pytest.org/en/7.2.x/)
 - [tmux](https://github.com/tmux/tmux/wiki/Getting-Started)
