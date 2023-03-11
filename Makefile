@@ -319,7 +319,7 @@ api-stop:
 	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
 		docker compose \
 		--project-name $(API_DOCKER_PROJECT_NAME) \
-		down $(API_SERVICE_NAME)
+		stop $(API_SERVICE_NAME)
 	@	$(MAKE) docker-prune
 
 ## Open API in web browser
