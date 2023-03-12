@@ -11,6 +11,8 @@ Sample app to count target items within an image or video.
   - [Starting the API service](#starting-the-api-service)
   - [Starting up all the services](#starting-up-all-the-services)
 - [Tests](#tests)
+- [Helpful Commands](#helpful-commands)
+- [VS Code Extensions](#vs-code-extensions)
 - [Resources](#resources)
 
 ## Setup
@@ -42,7 +44,7 @@ work / test the pipelines of this repository:
 
 The project comes with a `Makefile` (**not supported in Windows!**)
 that can be used for executing commands that will make the interaction
-with this project much smoother.
+with this project much smoother. Keep in mind that folders with spaces in their names may cause issues.
 
 One can see all of the available options by:
 
@@ -136,7 +138,7 @@ This will do the following tasks:
 - Clean Python files
 - Initialize the `.envrc` file used by `direnv`.
 - Delete an existing python environment for the project, if it exists.
-- Creates a new invironment, if applicable
+- Creates a new environment, if applicable
 - Apply `direnv allow` to allow for `direnv` modifications.
 - Install package requirements via `pip`
 - Install `pre-commit` for code-linting and code-checking.
@@ -218,7 +220,37 @@ python -m pytest -v -s
 The `-v` argument is for verbose output. The `-s` argument is for turning
 off the capture mode so that print statements are printed to the console.
 
+## Helpful Commands
+
+Here is a list of commands that may be helpful when interacting with this project.
+
+### Docker
+
+List all Docker containers:
+
+```shell
+docker ps -a
+```
+
+## VS Code Extensions
+
+To help facilitate local development you can install the [Visual Studio Code Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension for VS Code. This will allow you to connect to the local development Docker container and more easily develop features.
+
 ## Resources
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Pytest Documentation](https://docs.pytest.org/en/7.2.x/)
+- [direnv](https://github.com/direnv/direnv)
+- [Docker](https://docs.docker.com/reference/)
+- [Docker Compose](https://docs.docker.com/compose/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [flake8](https://flake8.pycqa.org/en/latest/)
+- [git](https://git-scm.com/)
+- [GitHub Actions](https://docs.github.com/en/actions)
+- [isort](https://pycqa.github.io/isort/index.html)
+- [Makefile](https://www.gnu.org/software/make/manual/make.html)
+- [Markdown](https://www.markdownguide.org/)
+- [Poetry](https://python-poetry.org/)
+- [pre-commit](https://pre-commit.com)
+- [Pydantic](https://docs.pydantic.dev/)
+- [pytest](https://docs.pytest.org/en/7.2.x/)
+- [Python](https://www.python.org/)
+- [tmux](https://github.com/tmux/tmux/wiki/Getting-Started)
