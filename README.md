@@ -11,6 +11,8 @@ Sample app to count target items within an image or video.
   - [Starting the API service](#starting-the-api-service)
   - [Starting up all the services](#starting-up-all-the-services)
 - [Tests](#tests)
+- [Helpful Commands](#helpful-commands)
+- [VS Code Extensions](#vs-code-extensions)
 - [Resources](#resources)
 
 ## Setup
@@ -136,7 +138,7 @@ This will do the following tasks:
 - Clean Python files
 - Initialize the `.envrc` file used by `direnv`.
 - Delete an existing python environment for the project, if it exists.
-- Creates a new invironment, if applicable
+- Creates a new environment, if applicable
 - Apply `direnv allow` to allow for `direnv` modifications.
 - Install package requirements via `pip`
 - Install `pre-commit` for code-linting and code-checking.
@@ -217,6 +219,22 @@ python -m pytest -v -s
 
 The `-v` argument is for verbose output. The `-s` argument is for turning
 off the capture mode so that print statements are printed to the console.
+
+## Helpful Commands
+
+Here is a list of commands that may be helpful when interacting with this project.
+
+### Docker
+
+List all Docker containers:
+
+```shell
+docker ps -a
+```
+
+## VS Code Extensions
+
+To help facilitate local development you can install the [Visual Studio Code Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension for VS Code. This will allow you to connect to the local development Docker container and more easily develop features.
 
 ## Resources
 
