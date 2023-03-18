@@ -220,6 +220,8 @@ python -m pytest -v -s
 The `-v` argument is for verbose output. The `-s` argument is for turning
 off the capture mode so that print statements are printed to the console.
 
+A Makefile command also exists to run these. See `make test`.
+
 ## Helpful Commands
 
 Here is a list of commands that may be helpful when interacting with this project.

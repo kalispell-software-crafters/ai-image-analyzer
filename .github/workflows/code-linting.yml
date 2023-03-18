@@ -20,3 +20,21 @@ jobs:
           make requirements
           make pre-commit-install
           make lint
+
+  #
+  # --- Unit Tests
+  test-code:
+    runs-on: ubuntu-latest
+    needs: lint-code
+    steps:
+      # Checkout repository
+      - uses: actions/checkout@v3
+      # Install Python
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+      # Install python dependencies
+      - name: Install dependencies
+        run: |
+          make requirements
+          make test
