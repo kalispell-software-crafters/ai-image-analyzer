@@ -39,6 +39,7 @@ COPY ${REQUIREMENTS_FILE} "${HOME_DIR}/${REQUIREMENTS_FILE}"
 # ---------------------- EXPOSING PORTS FOR APP -------------------------------
 
 EXPOSE 80
+EXPOSE 8501
 
 # --------------------- INSTALLING EXTRA PACKAGES -----------------------------
 # --- Updating packages and installing packages at the system-level

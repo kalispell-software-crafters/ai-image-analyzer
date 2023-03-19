@@ -25,10 +25,14 @@ REQUIREMENTS_DEPLOYMENT_FILE_TEMP = $(PROJECT_DIR)/requirements-deploy.tmp
 DOCKER_BUILDKIT_VALUE=1
 LOCAL_DEVELOPMENT_DIR_PATH="$(PROJECT_DIR)/docker"
 
-# -- App-related
+# -- API-related
 INPUT_APP_PORT=8090
 OUTPUT_APP_PORT=80
 APP_WEBSERVER_URL="http://localhost:$(INPUT_APP_PORT)"
+
+# -- Streamlit App-related
+STREAMLIT_SERVER_PORT=8501
+STREAMLIT_APP_WEBSERVER_URL="http://localhost:$(STREAMLIT_SERVER_PORT)"
 
 # ----------------------------- Python-specific -------------------------------
 # - Checking what type of python one is using
@@ -256,11 +260,11 @@ docker-prune:
 	@	docker system prune -f
 
 ## Stops both the API service and the local development service
-all-stop: api-stop docker-local-dev-stop
+all-stop: api-stop docker-local-dev-stop streamlit-app-stop
 	@	echo "All services are down"
 
 ## Starts both the API service and the local development service
-all-start: api-start docker-local-dev-start
+all-start: api-start docker-local-dev-start streamlit-app-start
 	@	echo "All services are up!"
 
 ## Build local development image
@@ -327,6 +331,39 @@ api-web:
 	@	python -m webbrowser "$(APP_WEBSERVER_URL)/docs"
 
 ###############################################################################
+# Docker Commands - Streamlit App-related                                               #
+###############################################################################
+
+STREAMLIT_DOCKER_PROJECT_NAME="$(PROJECT_NAME)_app"
+STREAMLIT_SERVICE_NAME="streamlit"
+
+## Build Streamlit App image
+streamlit-app-build: docker-prune
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(STREAMLIT_DOCKER_PROJECT_NAME) \
+		build $(STREAMLIT_SERVICE_NAME)
+
+## Start Streamlit App image container
+streamlit-app-start: streamlit-app-stop streamlit-app-build
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(STREAMLIT_DOCKER_PROJECT_NAME) \
+		up -d $(STREAMLIT_SERVICE_NAME)
+
+## Stop Streamlit App image container
+streamlit-app-stop:
+	@	cd $(LOCAL_DEVELOPMENT_DIR_PATH) && \
+		docker compose \
+		--project-name $(STREAMLIT_DOCKER_PROJECT_NAME) \
+		stop $(STREAMLIT_SERVICE_NAME)
+	@	$(MAKE) docker-prune
+
+## Open Streamlit App in web browser
+streamlit-app-web:
+	@	python -m webbrowser "$(STREAMLIT_APP_WEBSERVER_URL)"
+
+###############################################################################
 # Unit Tests and Code checking                                                #
 ###############################################################################
 
@@ -334,6 +371,7 @@ api-web:
 test:
 	python -m pytest -v -s
 
+# See: https://github.com/google/addlicense for more information
 ## Add licenses to Python files
 add-licenses:
 	@	docker run -it \
