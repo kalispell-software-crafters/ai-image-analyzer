@@ -20,11 +20,58 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Any
+import logging
 
+import validators
 from pydantic import BaseModel
 
+__author__ = ["Victor Calderon and Travis Craft"]
+__maintainer__ = ["Victor Calderon and Travis Craft"]
+__all__ = ["VideoDataDAO"]
 
-class VideoData(BaseModel):
-    raw_video: Any
-    url: str
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+logger.setLevel(logging.INFO)
+
+
+class VideoDataDAO(BaseModel):
+    """
+    Class object for interacting with an input video
+    """
+
+    def __init__(self, url: str):
+        """
+        Class object that interacts with video files.
+        """
+        # -- Defining class attributes
+        self.url = url
+        # Validating URL
+        self._validate_video_url()
+
+    def _validate_video_url(self):
+        """
+        Method for validating the input URL. This method checks
+        whether or not the URL is a valid Youtube URL.
+
+        Raises
+        ----------
+        ValueError : Exception
+            This error gets raised whenever the URL is not valid.
+        """
+        # Validating the input URL
+        if not validators.url(self.url):
+            msg = f">>> URL `{self.url}` is not valid!"
+            logger.error(msg)
+            raise ValueError(msg)
+
+        return
+
+    def download_stream(self):
+        """
+        Method for downloading the stream from the input video.
+
+        Returns
+        ------------
+        """
+
+        return
