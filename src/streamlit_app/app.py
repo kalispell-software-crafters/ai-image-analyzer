@@ -20,10 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from __future__ import absolute_import
+
 import contextlib
 import logging
 
 import streamlit as st
+
+from src.utils import default_variables as dv
 
 __author__ = ["Victor Calderon and Travis Craft"]
 __maintainer__ = ["Victor Calderon and Travis Craft"]
@@ -35,8 +39,6 @@ logger.setLevel(logging.INFO)
 
 # ------------------------- ENVIRONMENT VARIABLES -----------------------------
 
-APP_NAME = "Video and Image Analyzer"
-DEFAULT_CONFIDENCE_VALUE = 0.45
 
 # ------------------------------ MAIN FUNCTIONS -------------------------------
 
@@ -46,9 +48,9 @@ def main():
     Main function for the Streamlit Application
     """
     # --- Defining the layout
-    st.set_page_config(page_title=APP_NAME)
+    st.set_page_config(page_title=dv.project_app_name)
     # - Main page
-    st.title(APP_NAME)
+    st.title(dv.project_app_name)
     # - Sidebar of the application
     st.sidebar.title("Settings")
     # -- Model-specific configuration
@@ -58,7 +60,7 @@ def main():
         "Confidence level of the model",
         min_value=0.1,
         max_value=1.0,
-        value=DEFAULT_CONFIDENCE_VALUE,
+        value=dv.model_confidence_value,
     )
     # Type of device to use, i.e. CPU or GPU
     #
