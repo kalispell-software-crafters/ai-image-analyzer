@@ -20,9 +20,47 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from src.classes.video_data import VideoData
+import logging
+
+from src.classes.video_data import VideoDataDAO
+
+__author__ = ["Victor Calderon and Travis Craft"]
+__maintainer__ = ["Victor Calderon and Travis Craft"]
+__all__ = []
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+logger.setLevel(logging.INFO)
 
 
-def download_video(url: str) -> VideoData:
-    print(f"Downloading video from the following URL: {url}...")
-    return VideoData(url=url, raw_video=[])
+class VideoService(object):
+    """
+    Class object for the Video service.
+    """
+
+    def __init__(self, video_dao: "VideoDataDAO") -> None:
+        """
+        Class object for the Video Service.
+        """
+        self.video_dao = video_dao
+
+    def process_video(self):
+        """
+        Method for processing the input video.
+        """
+
+        return
+
+
+def download_video(url: str) -> VideoDataDAO:
+    """
+    Function to download a video object.
+    """
+    logger.info(f"Downloading video from the following URL: {url}...")
+    #
+    # Initializing object
+    video_obj = VideoDataDAO(url=url)
+    # Downloading video object
+    video_obj.download_stream()
+    #
+    return video_obj
