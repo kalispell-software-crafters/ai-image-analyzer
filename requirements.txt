@@ -1,4 +1,6 @@
 fastapi==0.92.0
 pydantic==1.10.5
+pytube==12.1.2
 streamlit==1.20.0
 uvicorn==0.20.0
+validators==0.20.0
