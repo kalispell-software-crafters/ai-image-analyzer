@@ -22,10 +22,11 @@
 
 from src.classes.video_data import VideoDataDAO
 from src.services.image_analysis_service import run_image_analysis
+from src.utils import default_variables as dv
 
 
 def test_run_image_analysis():
-    mock_video_data = VideoDataDAO(url="url@youtube.com", raw_video=[])
+    mock_video_data = VideoDataDAO(url=dv.video_url)
 
     results = run_image_analysis(mock_video_data)
 

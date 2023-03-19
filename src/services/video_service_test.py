@@ -21,13 +21,13 @@
 # SOFTWARE.
 
 from src.services.video_service import download_video
+from src.utils import default_variables as dv
 
 
 def test_download_video():
-    mock_url = "url@youtube.com"
+    mock_url = dv.video_url
 
     downloaded_video = download_video(mock_url)
 
     assert downloaded_video is not None
     assert downloaded_video.url == mock_url
-    assert downloaded_video.raw_video == []

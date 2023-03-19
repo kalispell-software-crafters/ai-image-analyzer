@@ -23,7 +23,6 @@
 import logging
 
 import validators
-from pydantic import BaseModel
 
 __author__ = ["Victor Calderon and Travis Craft"]
 __maintainer__ = ["Victor Calderon and Travis Craft"]
@@ -34,7 +33,7 @@ logging.basicConfig(level=logging.INFO)
 logger.setLevel(logging.INFO)
 
 
-class VideoDataDAO(BaseModel):
+class VideoDataDAO(object):
     """
     Class object for interacting with an input video
     """
