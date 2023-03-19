@@ -327,12 +327,20 @@ api-web:
 	@	python -m webbrowser "$(APP_WEBSERVER_URL)/docs"
 
 ###############################################################################
-# Unit Tests   					                                              #
+# Unit Tests and Code checking                                                #
 ###############################################################################
 
 ## Run all Python unit tests with verbose output and logs
 test:
 	python -m pytest -v -s
+
+## Add licenses to Python files
+add-licenses:
+	@	docker run -it \
+		-v ${PWD}:/src \
+		ghcr.io/google/addlicense \
+		-f ./LICENSE.rst  \
+		./src/**/*.py
 
 ###############################################################################
 # Self Documenting Commands                                                   #
