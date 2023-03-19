@@ -380,6 +380,10 @@ add-licenses:
 		-f ./LICENSE.rst  \
 		./src/**/*.py
 
+## Open up all web endpoints
+all-web: api-web streamlit-app-web
+	@	echo "All web endpoints opened!"
+
 ###############################################################################
 # Self Documenting Commands                                                   #
 ###############################################################################
