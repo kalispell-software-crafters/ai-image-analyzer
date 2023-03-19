@@ -21,9 +21,9 @@
 # SOFTWARE.
 
 from src.classes.analysis_results import AnalysisResults
-from src.classes.video_data import VideoData
+from src.classes.video_data import VideoDataDAO
 
 
-def run_image_analysis(video_data: VideoData) -> AnalysisResults:
+def run_image_analysis(video_data: VideoDataDAO) -> AnalysisResults:
     print("Running image analysis...")
     return AnalysisResults()

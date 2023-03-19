@@ -20,12 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from src.classes.video_data import VideoData
+from src.classes.video_data import VideoDataDAO
 from src.services.image_analysis_service import run_image_analysis
 
 
 def test_run_image_analysis():
-    mock_video_data = VideoData(url="url@youtube.com", raw_video=[])
+    mock_video_data = VideoDataDAO(url="url@youtube.com", raw_video=[])
 
     results = run_image_analysis(mock_video_data)
 
