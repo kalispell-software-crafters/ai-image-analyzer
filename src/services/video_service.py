@@ -22,7 +22,7 @@
 
 import logging
 
-from src.classes.video_data import VideoDataDAO
+from src.classes.video_data import VideoData
 
 __author__ = ["Victor Calderon and Travis Craft"]
 __maintainer__ = ["Victor Calderon and Travis Craft"]
@@ -38,7 +38,7 @@ class VideoService(object):
     Class object for the Video service.
     """
 
-    def __init__(self, video_dao: "VideoDataDAO") -> None:
+    def __init__(self, video_dao: "VideoData") -> None:
         """
         Class object for the Video Service.
         """
@@ -52,14 +52,14 @@ class VideoService(object):
         return
 
 
-def download_video(url: str) -> VideoDataDAO:
+def download_video(url: str) -> VideoData:
     """
     Function to download a video object.
     """
     logger.info(f"Downloading video from the following URL: {url}...")
     #
     # Initializing object
-    video_obj = VideoDataDAO(url=url)
+    video_obj = VideoData(url=url)
     # Downloading video object
     video_obj.download_stream()
     #

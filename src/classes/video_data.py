@@ -26,14 +26,14 @@ import validators
 
 __author__ = ["Victor Calderon and Travis Craft"]
 __maintainer__ = ["Victor Calderon and Travis Craft"]
-__all__ = ["VideoDataDAO"]
+__all__ = ["VideoData"]
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logger.setLevel(logging.INFO)
 
 
-class VideoDataDAO(object):
+class VideoData(object):
     """
     Class object for interacting with an input video
     """
@@ -62,8 +62,6 @@ class VideoDataDAO(object):
             msg = f">>> URL `{self.url}` is not valid!"
             logger.error(msg)
             raise ValueError(msg)
-
-        return
 
     def download_stream(self):
         """
