@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from src.classes.analyze_video_response import AnalyzeVideoResponse
 from src.services.image_analysis_service import run_image_analysis
@@ -38,8 +38,11 @@ async def root():
 async def analyze_video(
     video_url: str, target_item: str
 ) -> AnalyzeVideoResponse:
-    video_data = download_video(video_url)
-    results = run_image_analysis(video_data)
-    return AnalyzeVideoResponse(
-        video_url=video_url, target_item=target_item, results=results
-    )
+    try:
+        video_data = download_video(video_url)
+        results = run_image_analysis(video_data)
+        return AnalyzeVideoResponse(
+            video_url=video_url, target_item=target_item, results=results
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
