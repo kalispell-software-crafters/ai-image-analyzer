@@ -39,6 +39,7 @@ COPY ${REQUIREMENTS_FILE} "${HOME_DIR}/${REQUIREMENTS_FILE}"
 # ---------------------- EXPOSING PORTS FOR APP -------------------------------
 
 EXPOSE 80
+EXPOSE 8501
 
 # --------------------- INSTALLING EXTRA PACKAGES -----------------------------
 # --- Updating packages and installing packages at the system-level
@@ -82,6 +83,13 @@ RUN apt-get update -y && \
 
 RUN pip install --upgrade pip && \
     python -m pip install -r "${HOME_DIR}/${REQUIREMENTS_FILE}"
+
+# Temporary fix for PyTube's error: https://github.com/pytube/pytube/issues/1498
+ENV CIPHER_FILEPATH="/usr/local/lib/python3.9/site-packages/pytube/cipher.py"
+RUN sed -i 's/findall(transform_plan_raw)/findall(js)/g' \
+    ${CIPHER_FILEPATH} && \
+    sed  -i 's/transform_plan_raw/#transform_plan_raw/g' \
+    ${CIPHER_FILEPATH}
 
 # ----------------------------- PYTHON-SPECIFIC -------------------------------
 

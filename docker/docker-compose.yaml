@@ -45,3 +45,28 @@ services:
         "--reload-dir",
         "/opt/ml"
       ]
+  #
+  # --- Service for running the Streamlit application locally
+  streamlit:
+    # Building the local image
+    build:
+      context: ../
+      dockerfile: ./docker/image_analyzer.Dockerfile
+    # Running the local image
+    image: "ai-image-analyzer-streamlit"
+    container_name: "ai-image-analyzer-streamlit"
+    environment:
+      STREAMLIT_SERVER_PORT: ${STREAMLIT_SERVER_PORT}
+    volumes:
+      - ..:/opt/streamlit
+    ports:
+      - ${STREAMLIT_SERVER_PORT:-8501}:${STREAMLIT_SERVER_PORT:-8501}
+    working_dir: /opt/streamlit
+    command:
+      [
+        "streamlit",
+        "run",
+        "src/streamlit_app/app.py",
+        "--server.port",
+        "8501"
+      ]
