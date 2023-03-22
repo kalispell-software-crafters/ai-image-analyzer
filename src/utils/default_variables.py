@@ -34,5 +34,8 @@ model_confidence_value = 0.45
 # Default URL of a Youtube video
 video_url = "https://youtu.be/MNn9qKG2UFI"
 
+# Default target item to search for
+target_item = "car"
+
 # Default video format
 default_video_format = "mp4"

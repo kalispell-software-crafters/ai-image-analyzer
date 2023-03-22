@@ -20,11 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fastapi import FastAPI
+from typing import Optional
+
+from fastapi import FastAPI, HTTPException
 
 from src.classes.analyze_video_response import AnalyzeVideoResponse
 from src.services.image_analysis_service import run_image_analysis
 from src.services.video_service import download_video
+from src.utils.default_variables import target_item, video_url
 
 app = FastAPI()
 
@@ -36,10 +39,14 @@ async def root():
 
 @app.post("/analyze_video")
 async def analyze_video(
-    video_url: str, target_item: str
+    video_url: Optional[str] = video_url,
+    target_item: Optional[str] = target_item,
 ) -> AnalyzeVideoResponse:
-    video_data = download_video(video_url)
-    results = run_image_analysis(video_data)
-    return AnalyzeVideoResponse(
-        video_url=video_url, target_item=target_item, results=results
-    )
+    try:
+        video_data = download_video(video_url)
+        results = run_image_analysis(video_data)
+        return AnalyzeVideoResponse(
+            video_url=video_url, target_item=target_item, results=results
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
