@@ -36,7 +36,7 @@ async def root():
 
 @app.post("/analyze_video")
 async def analyze_video(
-    video_url: str, target_item: str
+    video_url: str = "https://youtu.be/MNn9qKG2UFI", target_item: str = "car"
 ) -> AnalyzeVideoResponse:
     try:
         video_data = download_video(video_url)
