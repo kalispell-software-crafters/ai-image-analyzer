@@ -1,3 +1,5 @@
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kalispell-software-crafters/ai-image-analyzer/code-linting.yml)
+
 # AI Image Analyzer
 
 Sample app to count target items within an image or video.
