@@ -114,6 +114,8 @@ class DataPreparationService(object):
                 logger.info(f"ret: {ret}")
             if not ret or frame_idx == 500:
                 break
+            # Changing colors to RGB
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             # Saving frame metadata to dictionary
             video_frames_dict[frame_idx] = {"frame": frame}
             # Increasing frame index
