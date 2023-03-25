@@ -58,6 +58,10 @@ RUN apt-get -y update && \
     bash-completion \
     zsh \
     htop \
+    # Installing for Opencv
+    ffmpeg \
+    libsm6 \
+    libxext6 \
     && \
     # Cleaning out
     rm -rf /var/lib/apt/lists/* && \
