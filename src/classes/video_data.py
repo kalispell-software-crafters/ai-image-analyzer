@@ -133,6 +133,6 @@ class VideoData(object):
         # Downloading video object
         return video_streams.first().download(
             output_path=output_path,
-            filename=output_basename,
+            filename=f"{output_basename}.{file_extension}",
             skip_existing=False,
         )
