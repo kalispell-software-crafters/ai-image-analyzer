@@ -21,8 +21,14 @@
 # SOFTWARE.
 
 import logging
+import tempfile
+from pathlib import Path
+from typing import Optional, Union
 
+import pytube as pt
 import validators
+
+from src.utils import default_variables as dv
 
 __author__ = ["Victor Calderon and Travis Craft"]
 __maintainer__ = ["Victor Calderon and Travis Craft"]
@@ -63,12 +69,70 @@ class VideoData(object):
             logger.error(msg)
             raise ValueError(msg)
 
-    def download_stream(self):
+    def download_stream(
+        self,
+        file_extension: Optional[str] = dv.default_video_extension,
+        output_path: Optional[Union[str, None]] = None,
+        output_basename: Optional[str] = "output_video",
+    ) -> str:
         """
         Method for downloading the stream from the input video.
 
+        Parameters
+        --------------
+        file_extension : str, optional
+            Extension to use for the video stream. This variable is set to
+            :mod:`~src.utils.default_variables.default_video_extension` as
+            default.
+
+        output_path : str, NoneType, optional
+            Path to the output directory, to which the output file will be
+            saved. If ``None``, a temporary directory will be created.
+            This variable is set to ``None`` by default.
+
+        output_basename : str, optional
+            Basename of the output video. This variable is set to
+            ``output_video`` by default.
+
         Returns
         ------------
+        output_filepath : str
+            Path to the output video file.
         """
+        # --- Downloading video from URL
+        # -- Initialize object
+        video_obj = pt.YouTube(url=self.url)
+        # -- Filter for the specified video format, e.g. 'mp4'
+        # Making sure that there are
+        video_streams = video_obj.streams.filter(file_extension=file_extension)
+        # Check that there are available streams
+        if not video_streams:
+            msg = (
+                f">>> No '{file_extension}' streams available for {self.url}!"
+            )
+            logger.error(msg)
+            raise TypeError(msg)
+        #
+        logger.info(
+            f">> There are '{len(video_streams)}' streams for the video"
+        )
+        # --- Download the video object
+        # Check the output directory
+        if not output_path:
+            # Creating new temporary directory
+            output_path = str(
+                Path("/tmp").joinpath(
+                    Path(tempfile.NamedTemporaryFile().name).name
+                )
+            )
+            Path(output_path).mkdir(parents=True, exist_ok=True)
+            logger.warning(">>> Temporary output directory created!")
+            #
+        logger.info(f">>> Output path: {output_path}")
 
-        return
+        # Downloading video object
+        return video_streams.first().download(
+            output_path=output_path,
+            filename=output_basename,
+            skip_existing=False,
+        )

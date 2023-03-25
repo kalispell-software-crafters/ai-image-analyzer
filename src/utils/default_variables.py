@@ -38,4 +38,4 @@ video_url = "https://youtu.be/MNn9qKG2UFI"
 target_item = "car"
 
 # Default video format
-default_video_format = "mp4"
+default_video_extension = "mp4"
