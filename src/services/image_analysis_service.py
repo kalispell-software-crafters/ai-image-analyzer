@@ -20,10 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import List
+
 from src.classes.analysis_results import AnalysisResults
 from src.classes.video_data import VideoData
 
 
-def run_image_analysis(video_data: VideoData) -> AnalysisResults:
+def run_image_analysis(video_data: VideoData) -> List[AnalysisResults]:
     print("Running image analysis...")
-    return AnalysisResults()
+    return [AnalysisResults()]

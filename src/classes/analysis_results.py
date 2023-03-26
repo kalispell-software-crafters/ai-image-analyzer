@@ -20,8 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import Any
+
 from pydantic import BaseModel
 
 
 class AnalysisResults(BaseModel):
-    pass
+    image: Any
+    inference: Any
