@@ -65,6 +65,7 @@ One can see all of the available options by:
     api-web                   Open API in web browser
     clean                     Removes artifacts from the build stage, and other common Python artifacts.
     clean-build               Remove build artifacts
+    clean-model-files         Remove files related to pre-trained models
     clean-pyc                 Removes Python file artifacts
     clean-secrets             Removes secret artifacts - Serverless
     clean-test                Remove test and coverage artifacts
