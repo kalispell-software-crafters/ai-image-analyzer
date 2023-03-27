@@ -28,4 +28,4 @@ from src.classes.video_data import VideoData
 
 def run_image_analysis(video_data: VideoData) -> List[AnalysisResults]:
     print("Running image analysis...")
-    return [AnalysisResults()]
+    return [AnalysisResults(output_image={}, fps=60, inference_results={})]
