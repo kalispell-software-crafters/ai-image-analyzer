@@ -136,7 +136,7 @@ def handle_analysis(url: str):
     results = run_image_analysis(video_data)
     for frame in results:
         logger.info("Frame results: ", frame)
-        output.image(frame.output_img)
+        output.image(frame.output_image)
         fps = frame.fps
         st1_text.markdown(f"**{height}**")
         st2_text.markdown(f"**{width}**")

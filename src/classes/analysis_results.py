@@ -26,5 +26,6 @@ from pydantic import BaseModel
 
 
 class AnalysisResults(BaseModel):
-    image: Any
-    inference: Any
+    output_image: Any
+    fps: float
+    inference_results: Any
