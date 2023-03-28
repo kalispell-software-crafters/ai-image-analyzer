@@ -27,5 +27,21 @@ from src.classes.video_data import VideoData
 
 
 def run_image_analysis(video_data: VideoData) -> List[AnalysisResults]:
+    """
+    Method for analyzing video data using a modeling service.
+
+    Parameters
+    --------------
+    video_data : VideoData
+        Video data to be analyzed.
+
+    Returns
+    ------------
+    analysis_results : List[AnalysisResults]
+        List of AnalysisResults objects for each frame.
+        This includes the processed image and inference results
+        from the modeling service.
+
+    """
     print("Running image analysis...")
     return [AnalysisResults(output_image={}, fps=60, inference_results={})]
