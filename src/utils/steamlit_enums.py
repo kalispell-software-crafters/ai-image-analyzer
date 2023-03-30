@@ -20,28 +20,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
-
-from src.classes.analysis_results import AnalysisResults
-from src.classes.video_data import VideoData
+from enum import Enum
 
 
-def run_image_analysis(video_data: VideoData) -> List[AnalysisResults]:
-    """
-    Method for analyzing video data using a modeling service.
+class MediaSource(str, Enum):
+    SAMPLE_DATA = "Sample data"
+    URL = "URL of the media"
 
-    Parameters
-    --------------
-    video_data : VideoData
-        Video data to be analyzed.
+    def __str__(self) -> str:
+        return str.__str__(self)
 
-    Returns
-    ------------
-    analysis_results : List[AnalysisResults]
-        List of AnalysisResults objects for each frame.
-        This includes the processed image and inference results
-        from the modeling service.
 
-    """
-    print("Running image analysis...")
-    return [AnalysisResults(output_image={}, fps=60, inference_results={})]
+class MediaType(str, Enum):
+    IMAGE = "Image"
+    VIDEO = "Video"
+
+    def __str__(self) -> str:
+        return str.__str__(self)
