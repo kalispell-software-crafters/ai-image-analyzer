@@ -113,8 +113,8 @@ def get_target_item() -> str:
 
 
 def handle_analysis(url: str, target_item: str):
-    isValid = validate_input(url, target_item)
-    if not isValid:
+    is_valid = validate_input(url, target_item)
+    if not is_valid:
         return
 
     try:
