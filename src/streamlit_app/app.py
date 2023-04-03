@@ -27,6 +27,7 @@ import logging
 
 import streamlit as st
 
+from src.classes.analysis_results import AnalysisResults
 from src.classes.video_data import VideoData
 from src.services.image_analysis_service import run_image_analysis
 from src.utils import default_variables as dv
@@ -48,8 +49,9 @@ def main():
     data_src = build_page()
 
     url = get_media_url(data_src)
+    target_item = get_target_item()
 
-    handle_analysis(url)
+    handle_analysis(url, target_item)
 
 
 def build_page():
@@ -73,6 +75,7 @@ def build_page():
     st.sidebar.markdown("---")
     # -- Media-specific
     st.sidebar.subheader("Media configuration")
+
     # Type of media to use, i.e. video or image
     input_data_type = st.sidebar.radio(
         "Select media type: ",
@@ -86,6 +89,7 @@ def build_page():
             MediaSource.URL,
         ],
     )
+
     logger.info(f"Data Source: {data_src}")
     logger.info(f"Type: {input_data_type}")
     logger.info(f"Confidence: {confidence}")
@@ -100,12 +104,18 @@ def get_media_url(data_src: str) -> str:
         return dv.video_url
 
 
-def handle_analysis(url: str):
-    if not url:
-        st.warning("Please enter a URL for you meida.")
-        return
+def get_target_item() -> str:
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Search Configuration")
+    target_item = st.sidebar.text_input("Item to search for:")
+    logger.info(f"Target item to search for: {target_item}")
+    return target_item
 
-    st.markdown(f"The target URL is: {url}")
+
+def handle_analysis(url: str, target_item: str):
+    is_valid = validate_input(url, target_item)
+    if not is_valid:
+        return
 
     try:
         video_data = VideoData(url=url)
@@ -118,29 +128,87 @@ def handle_analysis(url: str):
     height = 0
     width = 0
     fps = 0
-    st1, st2, st3 = st.columns(3)
-    with st1:
+    height_column, width_column, fps_column = st.columns(3)
+
+    with height_column:
         st.markdown("## Height")
-        st1_text = st.markdown(f"{height}")
-    with st2:
+        height_text = st.markdown(f"{height}")
+    with width_column:
         st.markdown("## Width")
-        st2_text = st.markdown(f"{width}")
-    with st3:
+        width_text = st.markdown(f"{width}")
+    with fps_column:
         st.markdown("## FPS")
-        st3_text = st.markdown(f"{fps}")
+        fps_text = st.markdown(f"{fps}")
 
     st.markdown("---")
-    output = st.empty()
+    st.markdown("## Frame")
+    # output = st.empty()
 
     # TODO Replace temp method with analysis workflow
     results = run_image_analysis(video_data)
+    found_target_item_count = 0
     for frame in results:
-        logger.info("Frame results: ", frame)
-        output.image(frame.output_image)
+        logger.info(f"Frame results: {frame}")
+        # output.image(frame.output_image)
         fps = frame.fps
-        st1_text.markdown(f"**{height}**")
-        st2_text.markdown(f"**{width}**")
-        st3_text.markdown(f"**{fps:.2f}**")
+        height_text.markdown(f"{height}")
+        width_text.markdown(f"{width}")
+        fps_text.markdown(f"{fps:.2f}")
+        found_target_item_count += get_count_of_target_item(target_item, frame)
+
+    display_summary(
+        target_item=target_item,
+        url=url,
+        found_target_item_count=found_target_item_count,
+    )
+
+
+def validate_input(url: str, target_item: str):
+    if not url:
+        st.warning("Please enter a URL for you meida.")
+        return False
+
+    if not target_item:
+        st.warning("Please enter an item to search for.")
+        return False
+
+    return True
+
+
+def get_count_of_target_item(
+    target_item: str, frame_analysis_results: AnalysisResults
+) -> int:
+    if (
+        frame_analysis_results
+        and frame_analysis_results.inference_results
+        and frame_analysis_results.inference_results.detected_objects
+    ):
+        logger.info(
+            f"""Detected objects: {
+                frame_analysis_results.inference_results.detected_objects
+            }"""
+        )
+        target_items = list(
+            filter(
+                lambda item: item.name == target_item,
+                frame_analysis_results.inference_results.detected_objects,
+            )
+        )
+        logger.info(f"Found objects: {target_items}")
+        return len(target_items)
+
+    return 0
+
+
+def display_summary(target_item: str, url: str, found_target_item_count: int):
+    logger.info(f"Found count: {found_target_item_count}")
+    st.markdown("---")
+    st.markdown("## Results Summary")
+    st.markdown(f"The target URL is: {url}")
+    st.markdown(f"The target item is: {target_item}")
+    st.markdown(
+        f"Total found (checking each frame): **{found_target_item_count}**"
+    )
 
 
 if __name__ == "__main__":
