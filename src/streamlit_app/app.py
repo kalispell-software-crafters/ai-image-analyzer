@@ -132,16 +132,17 @@ def handle_analysis(url: str, target_item: str):
     height = 0
     width = 0
     fps = 0
-    st1, st2, st3 = st.columns(3)
-    with st1:
+    height_column, width_column, fps_column = st.columns(3)
+
+    with height_column:
         st.markdown("## Height")
-        height_text = st.markdown(f"**{height}**")
-    with st2:
+        height_text = st.markdown(f"{height}")
+    with width_column:
         st.markdown("## Width")
-        st2_text = st.markdown(f"**{width}**")
-    with st3:
+        width_text = st.markdown(f"{width}")
+    with fps_column:
         st.markdown("## FPS")
-        st3_text = st.markdown(f"**{fps}**")
+        fps_text = st.markdown(f"{fps}")
 
     st.markdown("---")
     st.markdown("## Frame")
@@ -154,18 +155,18 @@ def handle_analysis(url: str, target_item: str):
         logger.info(f"Frame results: {frame}")
         # output.image(frame.output_image)
         fps = frame.fps
-        height_text.markdown(f"**{height}**")
-        st2_text.markdown(f"**{width}**")
-        st3_text.markdown(f"**{fps:.2f}**")
+        height_text.markdown(f"{height}")
+        width_text.markdown(f"{width}")
+        fps_text.markdown(f"{fps:.2f}")
         found_target_item_count += get_count_of_target_item(target_item, frame)
 
     logger.info(f"Foud count: {found_target_item_count}")
     st.markdown("---")
     st.markdown("## Results Summary")
     st.markdown(f"The target URL is: {url}")
-    st.markdown(f"The target item to search for is: {target_item}")
+    st.markdown(f"The target item is: {target_item}")
     st.markdown(
-        f"Total Found (checking each frame): **{found_target_item_count}**"
+        f"Total found (checking each frame): **{found_target_item_count}**"
     )
 
 
