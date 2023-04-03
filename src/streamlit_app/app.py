@@ -113,12 +113,8 @@ def get_target_item() -> str:
 
 
 def handle_analysis(url: str, target_item: str):
-    if not url:
-        st.warning("Please enter a URL for you meida.")
-        return
-
-    if not target_item:
-        st.warning("Please enter an item to search for.")
+    isValid = validate_input(url, target_item)
+    if not isValid:
         return
 
     try:
@@ -168,6 +164,18 @@ def handle_analysis(url: str, target_item: str):
     st.markdown(
         f"Total found (checking each frame): **{found_target_item_count}**"
     )
+
+
+def validate_input(url: str, target_item: str):
+    if not url:
+        st.warning("Please enter a URL for you meida.")
+        return False
+
+    if not target_item:
+        st.warning("Please enter an item to search for.")
+        return False
+
+    return True
 
 
 def get_count_of_target_item(
