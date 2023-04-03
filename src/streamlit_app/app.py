@@ -156,13 +156,10 @@ def handle_analysis(url: str, target_item: str):
         fps_text.markdown(f"{fps:.2f}")
         found_target_item_count += get_count_of_target_item(target_item, frame)
 
-    logger.info(f"Foud count: {found_target_item_count}")
-    st.markdown("---")
-    st.markdown("## Results Summary")
-    st.markdown(f"The target URL is: {url}")
-    st.markdown(f"The target item is: {target_item}")
-    st.markdown(
-        f"Total found (checking each frame): **{found_target_item_count}**"
+    display_summary(
+        target_item=target_item,
+        url=url,
+        found_target_item_count=found_target_item_count,
     )
 
 
@@ -201,6 +198,17 @@ def get_count_of_target_item(
         return len(target_items)
 
     return 0
+
+
+def display_summary(target_item: str, url: str, found_target_item_count: int):
+    logger.info(f"Found count: {found_target_item_count}")
+    st.markdown("---")
+    st.markdown("## Results Summary")
+    st.markdown(f"The target URL is: {url}")
+    st.markdown(f"The target item is: {target_item}")
+    st.markdown(
+        f"Total found (checking each frame): **{found_target_item_count}**"
+    )
 
 
 if __name__ == "__main__":
