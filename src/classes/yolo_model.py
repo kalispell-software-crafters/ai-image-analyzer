@@ -21,10 +21,11 @@
 # SOFTWARE.
 
 import logging
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
+import ultralytics as ul
 
 from src.utils import default_variables as dv
 
@@ -83,16 +84,62 @@ class YoloModel(object):
         msg += "\n" + "-" * 50 + "\n"
         logger.info(msg)
 
-    def _load_model(self):
+    def _load_model(self):  # sourcery skip: use-fstring-for-formatting
         """
         Method for loading in the specified model.
+
+        Note
+        ----------
+        The class object currently accepts only 2 kinds of model families,
+        i.e. ``yolov5`` and ``yolov8``.
         """
-        # Downloading model
-        model = torch.hub.load(
-            f"ultralytics/{self.model_family}",
-            self.model_version,
-            pretrained=True,
-        )
+        # -- Check model family
+        accepted_model_family = ["yolov5", "yolov8"]
+        if self.model_family not in accepted_model_family:
+            msg = ">>> Invalid model family `{}`. Available ones: {}".format(
+                self.model_family,
+                accepted_model_family,
+            )
+            logger.error(msg)
+            raise ValueError(msg)
+        #
+        # --- Loading in models
+        # YOLOv5
+        if self.model_family == "yolov5":
+            # URL to use
+            model_url = f"ultralytics/{self.model_family}"
+            # Check model version
+            available_model_versions = torch.hub.list(model_url)
+            if self.model_version not in available_model_versions:
+                msg = ">> Invalid model version `{}`! Available ones: \n{}"
+                msg = msg.format(
+                    self.model_version,
+                    available_model_versions,
+                )
+                logger.error(msg)
+                raise ValueError(msg)
+            #
+            # Loading in model
+            model = torch.load(
+                model_url,
+                self.model_version,
+                pretrained=True,
+            )
+        elif self.model_family == "yolov8":
+            # Available model versions
+            available_model_versions = ["yolov8n.pt", "yolov8n-seg.pt"]
+            if self.model_version not in available_model_versions:
+                msg = ">> Invalid model version `{}`! Available ones: \n{}"
+                msg = msg.format(
+                    self.model_version,
+                    available_model_versions,
+                )
+                logger.error(msg)
+                raise ValueError(msg)
+            #
+            # Loading in the model
+            model = ul.YOLO(self.model_version)
+
         # Sending model to device
         model.to(self.device)
 
@@ -109,3 +156,46 @@ class YoloModel(object):
         """
 
         return list(self.model.names.keys())
+
+    def predict(
+        self,
+        image: Union[str, np.ndarray],
+        model_confidence: Optional[float] = dv.model_confidence_value,
+        size: Optional[Union[Tuple, None]] = None,
+    ):
+        """
+        Method for producing an inference using the specified model.
+
+        Parameters
+        -------------
+        image : str, numpy.ndarray
+            Variable corresponding to the image, for which the inference
+            model will do an inference.
+
+        model_confidence : float, optional
+            Value corresponding to the model confidence to use when
+            performing an inference. This variable must be between
+            ``0 < model_confidence <= 1.0``. This variable is set to
+            :mod:`~src.utils.default_variables.model_confidence` by default.
+
+        size : NoneType, tuple, optional
+            If not ``None``, this variable determines the size of the
+            output inference image. This variable is set to ``None``
+            by default.
+
+        Returns
+        -------------
+        image_inference : numpy.ndarray
+            Variable corresponding to the inferred
+        """
+        # --- Checking input parameters
+        if not model_confidence or (
+            model_confidence <= 0 or model_confidence > 1.0
+        ):
+            logger.warning(
+                f">> Setting confidence to ``{dv.model_confidence_value}"
+            )
+            model_confidence = dv.model_confidence_value
+        # --- Running inference on image
+
+        return
