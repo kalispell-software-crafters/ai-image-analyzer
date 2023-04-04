@@ -134,3 +134,6 @@ dmypy.json
 .envrc
 *.DS_Store
 *.pt
+
+# --- User-specific
+*.jpg
