@@ -48,3 +48,6 @@ model_version = "yolov5s"
 
 # Default type of device, i.e. 'cpu' or 'gpu'
 device_type = "cpu"
+
+# Model target class
+model_target_class = "person"
