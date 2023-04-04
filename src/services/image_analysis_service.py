@@ -22,7 +22,11 @@
 
 from typing import List
 
-from src.classes.analysis_results import AnalysisResults
+from src.classes.analysis_results import (
+    AnalysisResults,
+    DetectedObject,
+    InferenceResults,
+)
 from src.classes.video_data import VideoData
 
 
@@ -44,4 +48,15 @@ def run_image_analysis(video_data: VideoData) -> List[AnalysisResults]:
 
     """
     print("Running image analysis...")
-    return [AnalysisResults(output_image={}, fps=60, inference_results={})]
+    return [
+        AnalysisResults(
+            output_image={},
+            fps=60,
+            inference_results=InferenceResults(
+                detected_objects=[
+                    DetectedObject(name="car"),
+                    DetectedObject(name="tree"),
+                ]
+            ),
+        )
+    ]
