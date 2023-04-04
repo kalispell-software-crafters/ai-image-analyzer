@@ -21,11 +21,13 @@
 # SOFTWARE.
 
 import logging
-from typing import Optional, Tuple, Union
+from collections import Counter
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
 import ultralytics as ul
+from PIL import Image as pilImage
 
 from src.utils import default_variables as dv
 
@@ -64,7 +66,15 @@ class YoloModel(object):
             device or ("cuda" if torch.cuda.is_available() else "cpu")
         )
         self.model = self._load_model()
-        self.model_classes = self._get_model_classes()
+        # Extracting model classes
+        (
+            self.model_classes,
+            self.classes_mapping_dict,
+        ) = self._get_model_classes()
+        (
+            self.model_classes_inv_dict,
+            self.class_names,
+        ) = self._map_model_classes()
 
     def show_params(self):
         """
@@ -120,7 +130,7 @@ class YoloModel(object):
                 raise ValueError(msg)
             #
             # Loading in model
-            model = torch.load(
+            model = torch.hub.load(
                 model_url,
                 self.model_version,
                 pretrained=True,
@@ -145,7 +155,7 @@ class YoloModel(object):
 
         return model
 
-    def _get_model_classes(self):
+    def _get_model_classes(self) -> Tuple[List, Dict]:
         """
         Method for extracting the model classes.
 
@@ -153,21 +163,47 @@ class YoloModel(object):
         -----------
         model_classes : list
             List of classes and the corresponding indices
+
+        classes_to_id_mapping : dict
+            Mapping of the class IDs to their corresponding labels.
         """
 
-        return list(self.model.names.keys())
+        return list(self.model.names.keys()), self.model.names.copy()
 
-    def predict(
+    def _map_model_classes(self):
+        """
+        Method for mapping the classes to their corresponding names.
+
+        Returns
+        -----------
+        model_classes_inv_dict : dict
+            Dictionary containing the "class-name -> class-id" mapping for
+            the specified model.
+
+        class_names : list
+            List of classes that the model is able to use.
+        """
+        # Inverse mapping of the model classes
+        model_classes_inv_dict = {
+            value: key for key, value in self.model.names.items()
+        }
+        # Available classes
+        class_names = list(model_classes_inv_dict.keys())
+
+        return model_classes_inv_dict, class_names
+
+    def _predict_yolov5(
         self,
         image: Union[str, np.ndarray],
         model_confidence: Optional[float] = dv.model_confidence_value,
         size: Optional[Union[Tuple, None]] = None,
-    ):
+        target_name: Optional[Union[str, list]] = dv.model_target_class,
+    ) -> Tuple["pilImage.Image", Dict]:
         """
-        Method for producing an inference using the specified model.
+        Method for producing the inference usign ``yolov5``.
 
         Parameters
-        -------------
+        ------------
         image : str, numpy.ndarray
             Variable corresponding to the image, for which the inference
             model will do an inference.
@@ -183,10 +219,167 @@ class YoloModel(object):
             output inference image. This variable is set to ``None``
             by default.
 
+        target_name : str, list, optional
+            Name of the target name to use when filtering out the
+            results of the output / inferred images. This variable
+            is set to :mod:`~src.utils.default_variables.model_target_class`
+            by default.
+
+        Returns
+        --------------
+        output_image : PIL.Image.Image
+            Image corresponding to the inferred image.
+
+        class_summary_in_image : dict
+            Dictionary containing the summary statistics of the classes found
+            in the inferred image.
+        """
+        # --- Specifying the model confidence value
+        self.model.conf = model_confidence
+        # --- Running the inference on the image
+        results = self.model(image, size=size) if size else self.model(image)
+        #
+        # --- Rendering image and getting the output RGB array
+        results.render()
+        # Creating RGB array for the output image
+        output_image = pilImage.fromarray(results.ims[0])
+        #
+        # --- Extract metadata
+        classes_present_in_result = (
+            results.pandas().xyxy[0][["name"]].value_counts("name").to_dict()
+        )
+        # Mapping the results
+        class_summary_in_image = {
+            key: value
+            for key, value in classes_present_in_result.items()
+            if key in target_name.lower()
+        }
+
+        return output_image, class_summary_in_image
+
+    def _predict_yolov8(
+        self,
+        image: Union[str, np.ndarray],
+        model_confidence: Optional[float] = dv.model_confidence_value,
+        size: Optional[Union[Tuple, None]] = None,
+        stream: Optional[bool] = False,
+        target_name: Optional[Union[str, list]] = dv.model_target_class,
+    ) -> Tuple["pilImage.Image", Dict]:
+        """
+        Method for producing the inference usign ``yolov8``.
+
+        Parameters
+        ------------
+        image : str, numpy.ndarray
+            Variable corresponding to the image, for which the inference
+            model will do an inference.
+
+        model_confidence : float, optional
+            Value corresponding to the model confidence to use when
+            performing an inference. This variable must be between
+            ``0 < model_confidence <= 1.0``. This variable is set to
+            :mod:`~src.utils.default_variables.model_confidence` by default.
+
+        size : NoneType, tuple, optional
+            If not ``None``, this variable determines the size of the
+            output inference image. This variable is set to ``None``
+            by default.
+
+        stream : bool, optional
+            If ``True``, the results will be provided as a ``generator``
+            rather than a ``list``. This is good whenever the input is a
+            video and can prevent it from having memory issues. This
+            variable is set to ``False`` by default.
+
+        target_name : str, list, optional
+            Name of the target name to use when filtering out the
+            results of the output / inferred images. This variable
+            is set to :mod:`~src.utils.default_variables.model_target_class`
+            by default.
+
+        Returns
+        --------------
+        output_image : PIL.Image.Image
+            Image corresponding to the inferred image.
+
+        class_summary_in_image : dict
+            Dictionary containing the summary statistics of the classes found
+            in the inferred image.
+        """
+        # --- Specifying the model confidence value
+        self.model.overrides["conf"] = model_confidence
+        # --- Running the inference on the image
+        results = (
+            self.model.predict(image, imgsz=size, stream=stream)
+            if size
+            else self.model.predict(image, stream=stream)
+        )
+        # --- Extracting results
+        # Getting the first element
+        inference_result = results[0]
+        # Extracting the RGB file
+        output_image = pilImage.fromarray(
+            inference_result.plot(
+                pil=True,
+                show_conf=True,
+            )
+        )
+        #
+        # --- Extract metadata
+        # Extracting classes
+        classes_present_in_result = Counter(
+            [int(xx) for xx in inference_result.boxes.cls.numpy()]
+        )
+        # Mapping the results
+        class_summary_in_image = {
+            self.classes_mapping_dict[key]: value
+            for key, value in classes_present_in_result.items()
+            if self.classes_mapping_dict[key] in target_name.lower()
+        }
+
+        return output_image, class_summary_in_image
+
+    def predict(
+        self,
+        image: Union[str, np.ndarray],
+        target_name: Optional[Union[str, list]] = dv.model_target_class,
+        model_confidence: Optional[float] = dv.model_confidence_value,
+        size: Optional[Union[Tuple, None]] = None,
+    ) -> Tuple["pilImage.Image", Dict]:
+        """
+        Method for producing an inference using the specified model.
+
+        Parameters
+        -------------
+        image : str, numpy.ndarray
+            Variable corresponding to the image, for which the inference
+            model will do an inference.
+
+        target_name : str, list, optional
+            Name of the target name to use when filtering out the
+            results of the output / inferred images. This variable
+            is set to :mod:`~src.utils.default_variables.model_target_class`
+            by default.
+
+        model_confidence : float, optional
+            Value corresponding to the model confidence to use when
+            performing an inference. This variable must be between
+            ``0 < model_confidence <= 1.0``. This variable is set to
+            :mod:`~src.utils.default_variables.model_confidence` by default.
+
+        size : NoneType, tuple, optional
+            If not ``None``, this variable determines the size of the
+            output inference image. This variable is set to ``None``
+            by default.
+
         Returns
         -------------
-        image_inference : numpy.ndarray
-            Variable corresponding to the inferred
+        output_image : PIL.Image.Image
+            Image corresponding to the inferred image.
+
+        class_summary_in_image : dict
+            Dictionary containing the summary statistics of the classes found
+            in the inferred image.
         """
         # --- Checking input parameters
         if not model_confidence or (
@@ -196,6 +389,35 @@ class YoloModel(object):
                 f">> Setting confidence to ``{dv.model_confidence_value}"
             )
             model_confidence = dv.model_confidence_value
-        # --- Running inference on image
+        # --- Running the inference function
+        predict_func = (
+            self._predict_yolov8
+            if self.model_family == "yolov8"
+            else self._predict_yolov5
+        )
 
-        return
+        return predict_func(
+            image=image,
+            model_confidence=model_confidence,
+            size=size,
+            target_name=target_name,
+        )
+
+
+if __name__ == "__main__":
+    # Yolo model
+    yolo_model = "v5"
+    # Initialize Yolo model service
+    yolo_obj = (
+        YoloModel()
+        if yolo_model == "v5"
+        else YoloModel(model_family="yolov8", model_version="yolov8n.pt")
+    )
+    yolo_obj.show_params()
+    # Specifying the target variable
+    target_name = "person"
+    # Download an image
+    image = "https://ultralytics.com/images/zidane.jpg"
+    # Create inference
+    result = yolo_obj.predict(image=image, target_name=target_name)
+    logger.info(f"result: {result}")
