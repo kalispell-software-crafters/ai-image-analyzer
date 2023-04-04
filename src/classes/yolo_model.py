@@ -252,7 +252,7 @@ class YoloModel(object):
         class_summary_in_image = {
             key: value
             for key, value in classes_present_in_result.items()
-            if key in target_name.lower()
+            if key in target_name
         }
 
         return output_image, class_summary_in_image
@@ -310,9 +310,9 @@ class YoloModel(object):
         self.model.overrides["conf"] = model_confidence
         # --- Running the inference on the image
         results = (
-            self.model.predict(image, imgsz=size, stream=stream)
+            self.model.predict(image, imgsz=size, stream=stream, save=True)
             if size
-            else self.model.predict(image, stream=stream)
+            else self.model.predict(image, stream=stream, save=True)
         )
         # --- Extracting results
         # Getting the first element
@@ -334,7 +334,7 @@ class YoloModel(object):
         class_summary_in_image = {
             self.classes_mapping_dict[key]: value
             for key, value in classes_present_in_result.items()
-            if self.classes_mapping_dict[key] in target_name.lower()
+            if self.classes_mapping_dict[key] in target_name
         }
 
         return output_image, class_summary_in_image
@@ -389,6 +389,16 @@ class YoloModel(object):
                 f">> Setting confidence to ``{dv.model_confidence_value}"
             )
             model_confidence = dv.model_confidence_value
+        #
+        # --- Make all target names lowercase
+        target_name = (
+            self.class_names
+            if not target_name
+            else (
+                [target_name] if isinstance(target_name, str) else target_name
+            )
+        )
+        target_name = [xx.lower() for xx in target_name]
         # --- Running the inference function
         predict_func = (
             self._predict_yolov8
@@ -406,7 +416,7 @@ class YoloModel(object):
 
 if __name__ == "__main__":
     # Yolo model
-    yolo_model = "v5"
+    yolo_model = "v8"
     # Initialize Yolo model service
     yolo_obj = (
         YoloModel()
@@ -415,7 +425,7 @@ if __name__ == "__main__":
     )
     yolo_obj.show_params()
     # Specifying the target variable
-    target_name = "person"
+    target_name = None
     # Download an image
     image = "https://ultralytics.com/images/zidane.jpg"
     # Create inference

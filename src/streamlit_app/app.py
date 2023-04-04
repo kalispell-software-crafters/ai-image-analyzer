@@ -24,12 +24,15 @@ from __future__ import absolute_import
 
 import contextlib
 import logging
+from collections import Counter
 
+import pandas as pd
 import streamlit as st
 
-from src.classes.analysis_results import AnalysisResults
 from src.classes.video_data import VideoData
-from src.services.image_analysis_service import run_image_analysis
+from src.classes.yolo_model import YoloModel
+from src.services.image_analysis_service import AnalyzerService
+from src.services.prep_service import DataPreparationService
 from src.utils import default_variables as dv
 from src.utils.steamlit_enums import MediaSource, MediaType
 
@@ -124,11 +127,21 @@ def handle_analysis(url: str, target_item: str):
             f"There was a problem processing the URL.\n\nError: {exception}"
         )
         return
+    #
+    # --- Initializing service
+    prep_service = DataPreparationService(video_obj=video_data)
+    model_service = YoloModel()
+    analyze_service = AnalyzerService(
+        prep_service=prep_service,
+        model_service=model_service,
+        target_name=target_item,
+    )
 
     height = 0
     width = 0
-    fps = 0
-    height_column, width_column, fps_column = st.columns(3)
+    # fps = 0
+    height_column, width_column = st.columns(2)
+    # height_column, width_column, fps_column = st.columns(3)
 
     with height_column:
         st.markdown("## Height")
@@ -136,25 +149,24 @@ def handle_analysis(url: str, target_item: str):
     with width_column:
         st.markdown("## Width")
         width_text = st.markdown(f"{width}")
-    with fps_column:
-        st.markdown("## FPS")
-        fps_text = st.markdown(f"{fps}")
+    # with fps_column:
+    #     st.markdown("## FPS")
+    #     fps_text = st.markdown(f"{fps}")
 
     st.markdown("---")
     st.markdown("## Frame")
-    # output = st.empty()
+    output = st.empty()
 
     # TODO Replace temp method with analysis workflow
-    results = run_image_analysis(video_data)
-    found_target_item_count = 0
+    # Extract results
+    results = analyze_service.run_image_analysis()
+    found_target_item_count = Counter()
     for frame in results:
         logger.info(f"Frame results: {frame}")
-        # output.image(frame.output_image)
-        fps = frame.fps
+        output.image(frame.output_image)
         height_text.markdown(f"{height}")
         width_text.markdown(f"{width}")
-        fps_text.markdown(f"{fps:.2f}")
-        found_target_item_count += get_count_of_target_item(target_item, frame)
+        found_target_item_count += Counter(frame.inference_results)
 
     display_summary(
         target_item=target_item,
@@ -175,40 +187,20 @@ def validate_input(url: str, target_item: str):
     return True
 
 
-def get_count_of_target_item(
-    target_item: str, frame_analysis_results: AnalysisResults
-) -> int:
-    if (
-        frame_analysis_results
-        and frame_analysis_results.inference_results
-        and frame_analysis_results.inference_results.detected_objects
-    ):
-        logger.info(
-            f"""Detected objects: {
-                frame_analysis_results.inference_results.detected_objects
-            }"""
-        )
-        target_items = list(
-            filter(
-                lambda item: item.name == target_item,
-                frame_analysis_results.inference_results.detected_objects,
-            )
-        )
-        logger.info(f"Found objects: {target_items}")
-        return len(target_items)
-
-    return 0
-
-
-def display_summary(target_item: str, url: str, found_target_item_count: int):
-    logger.info(f"Found count: {found_target_item_count}")
+def display_summary(
+    target_item: str,
+    url: str,
+    found_target_item_count: "Counter",
+):
     st.markdown("---")
     st.markdown("## Results Summary")
     st.markdown(f"The target URL is: {url}")
     st.markdown(f"The target item is: {target_item}")
-    st.markdown(
-        f"Total found (checking each frame): **{found_target_item_count}**"
-    )
+    # -- Create DataFrame from input dictionary
+    found_target_item_df = pd.DataFrame.from_dict(
+        found_target_item_count, orient="index"
+    ).reset_index()
+    st.dataframe(found_target_item_df)
 
 
 if __name__ == "__main__":
