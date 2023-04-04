@@ -123,7 +123,7 @@ destroy: clean pre-commit-uninstall delete-environment
 # -------------------- Functions for cleaning repository ----------------------
 
 ## Removes artifacts from the build stage, and other common Python artifacts.
-clean: clean-build clean-pyc clean-test clean-secrets clean-model-files
+clean: clean-build clean-pyc clean-test clean-secrets clean-model-files clean-images
 
 ## Removes Python file artifacts
 clean-pyc:
@@ -150,6 +150,11 @@ clean-test:
 ## Remove files related to pre-trained models
 clean-model-files:
 	find . -name '*.pt' -exec rm -fr {} +
+
+## Clean left-over images
+clean-images:
+	find . -name '*.png' -exec rm -fr {} +
+	find . -name '*.jpg' -exec rm -fr {} +
 
 ## Removes secret artifacts - Serverless
 clean-secrets:
