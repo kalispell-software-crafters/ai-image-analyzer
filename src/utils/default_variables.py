@@ -51,3 +51,6 @@ device_type = "cpu"
 
 # Model target class
 model_target_class = "person"
+
+# Number of frames to use
+total_number_frames = 100

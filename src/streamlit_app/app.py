@@ -26,6 +26,7 @@ import contextlib
 import logging
 import time
 from collections import Counter
+from typing import Tuple
 
 import pandas as pd
 import streamlit as st
@@ -50,6 +51,8 @@ logger.setLevel(logging.INFO)
 # Amount of time (in seconds) to sleep between frames
 TIME_BETWEEN_FRAMES = 0.01
 
+# Time for inference
+TIME_FORM_INFERENCE_PER_FRAME = 1e-2
 
 # --------------------------- CLASSES AND FUNCTIONS ---------------------------
 
@@ -58,15 +61,24 @@ def main():
     """
     Main function for the Streamlit Application
     """
-    data_src = build_page()
+    # --- Defining layout
+    data_src, model_selection, number_frames = build_page()
+    # --- Defining Yolo Model
+    model_service = load_model_service(model_selection=model_selection)
 
     url = get_media_url(data_src)
-    target_item = get_target_item()
+    target_item = get_target_item(model_service=model_service)
 
-    handle_analysis(url, target_item)
+    handle_analysis(
+        url,
+        target_item,
+        model_selection,
+        number_frames,
+        model_selection,
+    )
 
 
-def build_page():
+def build_page() -> Tuple[str, str]:
     # --- Defining the layout
     st.set_page_config(page_title=dv.project_app_name)
     # - Main page
@@ -82,6 +94,17 @@ def build_page():
         min_value=0.1,
         max_value=1.0,
         value=dv.model_confidence_value,
+    )
+    # Type of model to use
+    model_selection = st.sidebar.radio(
+        "Select type of model:", ["yolov5", "yolov8"]
+    )
+    # Number of frames to use
+    number_frames = st.sidebar.slider(
+        label="Pick number of frames to analyze",
+        min_value=10,
+        max_value=1000,
+        value=dv.total_number_frames,
     )
     # Type of device to use, i.e. CPU or GPU
     st.sidebar.markdown("---")
@@ -106,7 +129,7 @@ def build_page():
     logger.info(f"Type: {input_data_type}")
     logger.info(f"Confidence: {confidence}")
 
-    return data_src
+    return data_src, model_selection, number_frames
 
 
 def get_media_url(data_src: str) -> str:
@@ -116,16 +139,53 @@ def get_media_url(data_src: str) -> str:
         return dv.video_url
 
 
-def get_target_item() -> str:
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Search Configuration")
-    target_item = st.sidebar.text_input("Item to search for:")
-    logger.info(f"Target item to search for: {target_item}")
-    return target_item
+def get_target_item(model_service: "YoloModel") -> str:
+    """
+    Function to get the target item to query.
+
+    Parameters
+    ---------------
+    model_selection : str
+        Type of model to use.
+
+    model_service : ``YoloModel``
+        Service used for evaluating the model
+
+    Returns
+    ----------
+    target_item : str
+        Name of the target items to use.
+    """
+    # -- Extracting set of possible classes
+    class_names = model_service.class_names
+
+    return (
+        st.sidebar.multiselect(
+            "Select Classes", class_names, default=[class_names[0]]
+        )
+        if st.sidebar.checkbox("Custom Classes")
+        else None
+    )
 
 
-def handle_analysis(url: str, target_item: str):
-    is_valid = validate_input(url, target_item)
+def handle_analysis(
+    url: str,
+    target_item: str,
+    model_selection: str,
+    number_frames: int,
+    model_service: "YoloModel",
+):
+    """
+    Function that handles the overall execution of the Streamlit app.
+
+    Parameters
+    -------------
+    url : str
+        URL of the Video to YouTube analyze.
+
+    target_item : str, NoneType, optional
+    """
+    is_valid = validate_input(url)
     if not is_valid:
         return
 
@@ -138,8 +198,12 @@ def handle_analysis(url: str, target_item: str):
         return
     #
     # --- Initializing service
-    prep_service = DataPreparationService(video_obj=video_data)
-    model_service = YoloModel()
+    # Initializing services
+    prep_service = DataPreparationService(
+        video_obj=video_data,
+        number_frames=number_frames,
+    )
+    model_service = load_model_service(model_selection=model_selection)
     analyze_service = AnalyzerService(
         prep_service=prep_service,
         model_service=model_service,
@@ -148,9 +212,7 @@ def handle_analysis(url: str, target_item: str):
 
     height = 0
     width = 0
-    # fps = 0
     height_column, width_column = st.columns(2)
-    # height_column, width_column, fps_column = st.columns(3)
 
     with height_column:
         st.markdown("## Height")
@@ -158,22 +220,24 @@ def handle_analysis(url: str, target_item: str):
     with width_column:
         st.markdown("## Width")
         width_text = st.markdown(f"{width}")
-    # with fps_column:
-    #     st.markdown("## FPS")
-    #     fps_text = st.markdown(f"{fps}")
 
     st.markdown("---")
     st.markdown("## Frame")
     output = st.empty()
 
-    # TODO Replace temp method with analysis workflow
+    # Time to wait to run
+    time_per_inference = TIME_FORM_INFERENCE_PER_FRAME * number_frames
     # Extract results
-    results = analyze_service.run_image_analysis()
+    with st.spinner(text="Calculating inferences ..."):
+        results = analyze_service.run_image_analysis()
+        time.sleep(time_per_inference)
+    #
+    # Showing results
     found_target_item_count = Counter()
     for _, frame_results in results.items():
         output.image(frame_results.output_image)
-        height_text.markdown(f"{height}")
-        width_text.markdown(f"{width}")
+        height_text.markdown(f"{frame_results.output_image.height}")
+        width_text.markdown(f"{frame_results.output_image.width}")
         found_target_item_count += Counter(frame_results.inference_results)
         time.sleep(TIME_BETWEEN_FRAMES)
 
@@ -184,16 +248,58 @@ def handle_analysis(url: str, target_item: str):
     )
 
 
-def validate_input(url: str, target_item: str):
+def validate_input(url: str):
     if not url:
         st.warning("Please enter a URL for you meida.")
         return False
 
-    if not target_item:
-        st.warning("Please enter an item to search for.")
-        return False
-
     return True
+
+
+def get_model_attributes(model_selection: str):
+    """
+    Function to determine the type of model family and
+    model version to use
+
+    Parameters
+    -------------
+    model_selection : str
+        Type of model to use. Options: [`yolov5`, `yolov8`]
+
+    Returns
+    -----------
+    model_config : dict
+        Dictionary containing the set of configuration to
+        use for the specified model.
+    """
+    if model_selection == "yolov5":
+        return {"model_family": "yolov5", "model_version": "yolov5s"}
+    elif model_selection == "yolov8":
+        return {"model_family": "yolov8", "model_version": "yolov8n.pt"}
+
+
+# @st.cache_resource
+def load_model_service(model_selection: str) -> "YoloModel":
+    """
+    Function to load the ``model`` service.
+
+    Parameters
+    -------------
+    model_selection : str
+        Type of model to use. Options: [`yolov5`, `yolov8`]
+
+    Returns
+    ----------
+    model_service : ``src.classes.yolo_model.YoloModel``
+        Service corresponding to the initialized Yolo Model
+    """
+    # -- Extracting set of possible classes
+    model_config_dict = get_model_attributes(model_selection=model_selection)
+
+    return YoloModel(
+        model_family=model_config_dict["model_family"],
+        model_version=model_config_dict["model_version"],
+    )
 
 
 def display_summary(
