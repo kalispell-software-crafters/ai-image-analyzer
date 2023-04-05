@@ -24,6 +24,7 @@ from __future__ import absolute_import
 
 import contextlib
 import logging
+import time
 from collections import Counter
 
 import pandas as pd
@@ -43,6 +44,14 @@ __all__ = []
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logger.setLevel(logging.INFO)
+
+# --------------------------- ENVIRONMENT VARIABLES ---------------------------
+
+# Amount of time (in seconds) to sleep between frames
+TIME_BETWEEN_FRAMES = 0.01
+
+
+# --------------------------- CLASSES AND FUNCTIONS ---------------------------
 
 
 def main():
@@ -161,12 +170,12 @@ def handle_analysis(url: str, target_item: str):
     # Extract results
     results = analyze_service.run_image_analysis()
     found_target_item_count = Counter()
-    for frame in results:
-        logger.info(f"Frame results: {frame}")
-        output.image(frame.output_image)
+    for _, frame_results in results.items():
+        output.image(frame_results.output_image)
         height_text.markdown(f"{height}")
         width_text.markdown(f"{width}")
-        found_target_item_count += Counter(frame.inference_results)
+        found_target_item_count += Counter(frame_results.inference_results)
+        time.sleep(TIME_BETWEEN_FRAMES)
 
     display_summary(
         target_item=target_item,
@@ -197,9 +206,11 @@ def display_summary(
     st.markdown(f"The target URL is: {url}")
     st.markdown(f"The target item is: {target_item}")
     # -- Create DataFrame from input dictionary
-    found_target_item_df = pd.DataFrame.from_dict(
-        found_target_item_count, orient="index"
-    ).reset_index()
+    found_target_item_df = (
+        pd.DataFrame.from_dict(found_target_item_count, orient="index")
+        .reset_index()
+        .rename(columns={0: "Counts", "index": "Class Names"})
+    )
     st.dataframe(found_target_item_df)
 
 

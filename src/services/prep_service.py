@@ -40,6 +40,14 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logger.setLevel(logging.INFO)
 
+# --------------------------- ENVIRONMENT VARIABLES ---------------------------
+
+# Amount of time (in seconds) to sleep between frames
+NUMBER_OF_FRAMES = 500
+
+
+# --------------------------- CLASSES AND FUNCTIONS ---------------------------
+
 
 class DataPreparationService(object):
     """
@@ -107,12 +115,13 @@ class DataPreparationService(object):
         video_frames_dict = defaultdict(dict)
         frame_idx = 0
         start_time = time.time()
+        logger.info(">>> Reading in frames from video ...")
         while True:
             # Extracting frame
             ret, frame = video_cv.read()
             if ret % 10 == 0:
                 logger.info(f"ret: {ret}")
-            if not ret or frame_idx == 500:
+            if not ret or frame_idx == NUMBER_OF_FRAMES:
                 break
             # Changing colors to RGB
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

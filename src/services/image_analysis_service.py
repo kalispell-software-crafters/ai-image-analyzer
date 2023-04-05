@@ -23,6 +23,9 @@
 import logging
 from typing import Optional, Union
 
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
+
 from src.classes.analysis_results import AnalysisResults
 from src.classes.yolo_model import YoloModel
 from src.services.prep_service import DataPreparationService
@@ -69,22 +72,26 @@ class AnalyzerService(object):
         # --- Create inference for each frame
         inference_results = {}
         # Looping over each frame and extracting the results
-        for frame_idx, frame in video_frames_dict.items():
-            # Running inference on the image
-            (
-                inference_output_image,
-                inference_image_results,
-            ) = self.model_service.predict(
-                image=frame,
-                target_name=self.target_name,
-            )
-            # Create object for saving analysis results
-            frame_results_obj = AnalysisResults(
-                original_image=frame,
-                output_image=inference_output_image,
-                inference_results=inference_image_results,
-            )
-            # Save results to main dictionary
-            inference_results[frame_idx] = frame_results_obj
+        with logging_redirect_tqdm(loggers=[logger]):
+            tqdm_desc = "Running inference: "
+            for frame_idx, frame_metadata in tqdm(
+                video_frames_dict.items(), desc=tqdm_desc
+            ):
+                # Running inference on the image
+                (
+                    inference_output_image,
+                    inference_image_results,
+                ) = self.model_service.predict(
+                    image=frame_metadata["frame"],
+                    target_name=self.target_name,
+                )
+                # Create object for saving analysis results
+                frame_results_obj = AnalysisResults(
+                    original_image=frame_metadata["frame"],
+                    output_image=inference_output_image,
+                    inference_results=inference_image_results,
+                )
+                # Save results to main dictionary
+                inference_results[frame_idx] = frame_results_obj
 
         return inference_results
