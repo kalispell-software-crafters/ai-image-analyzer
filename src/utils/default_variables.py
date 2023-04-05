@@ -39,3 +39,18 @@ target_item = "car"
 
 # Default video format
 default_video_extension = "mp4"
+
+# Default model type
+model_family = "yolov5"
+
+# Model version
+model_version = "yolov5s"
+
+# Default type of device, i.e. 'cpu' or 'gpu'
+device_type = "cpu"
+
+# Model target class
+model_target_class = "person"
+
+# Number of frames to use
+total_number_frames = 100

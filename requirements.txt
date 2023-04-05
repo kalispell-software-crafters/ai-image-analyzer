@@ -1,7 +1,14 @@
+-r https://raw.githubusercontent.com/ultralytics/yolov5/master/requirements.txt
+Pillow==9.5.0
 fastapi==0.92.0
 opencv-python==4.7.0.72
 pydantic==1.10.5
 pytube==12.1.2
 streamlit==1.20.0
+torch==2.0.0
+torchvision>=0.15.1
+tqdm==4.65.0
+ultralytics==8.0.57
 uvicorn==0.20.0
 validators==0.20.0
+setuptools==67.6.1

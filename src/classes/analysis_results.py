@@ -20,20 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Any, List
+from typing import Any, Dict
 
 from pydantic import BaseModel
 
 
-class DetectedObject(BaseModel):
-    name: str
-
-
-class InferenceResults(BaseModel):
-    detected_objects: List[DetectedObject]
-
-
 class AnalysisResults(BaseModel):
+    original_image: Any
     output_image: Any
-    fps: float
-    inference_results: InferenceResults
+    inference_results: Dict

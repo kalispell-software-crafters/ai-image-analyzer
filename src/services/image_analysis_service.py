@@ -20,43 +20,78 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
+import logging
+from typing import Optional, Union
 
-from src.classes.analysis_results import (
-    AnalysisResults,
-    DetectedObject,
-    InferenceResults,
-)
-from src.classes.video_data import VideoData
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
+
+from src.classes.analysis_results import AnalysisResults
+from src.classes.yolo_model import YoloModel
+from src.services.prep_service import DataPreparationService
+from src.utils import default_variables as dv
+
+__author__ = ["Victor Calderon and Travis Craft"]
+__maintainer__ = ["Victor Calderon and Travis Craft"]
+__all__ = ["YoloModel"]
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+logger.setLevel(logging.INFO)
 
 
-def run_image_analysis(video_data: VideoData) -> List[AnalysisResults]:
+class AnalyzerService(object):
     """
-    Method for analyzing video data using a modeling service.
-
-    Parameters
-    --------------
-    video_data : VideoData
-        Video data to be analyzed.
-
-    Returns
-    ------------
-    analysis_results : List[AnalysisResults]
-        List of AnalysisResults objects for each frame.
-        This includes the processed image and inference results
-        from the modeling service.
-
+    Class object for the main Analysis Service.
     """
-    print("Running image analysis...")
-    return [
-        AnalysisResults(
-            output_image={},
-            fps=60,
-            inference_results=InferenceResults(
-                detected_objects=[
-                    DetectedObject(name="car"),
-                    DetectedObject(name="tree"),
-                ]
-            ),
+
+    def __init__(
+        self,
+        prep_service: "DataPreparationService",
+        model_service: "YoloModel",
+        file_extension: Optional[str] = dv.default_video_extension,
+        target_name: Optional[Union[str, list]] = dv.model_target_class,
+    ) -> None:
+        """
+        Class object for the main Analysis Service.
+        """
+        # --- Instantiate attributes
+        self.prep_service = prep_service
+        self.model_service = model_service
+        self.file_extension = file_extension
+        self.target_name = target_name
+
+    def run_image_analysis(self):
+        """
+        Method for running the image analysis for a given data.
+        """
+        # --- Extract frames from video
+        video_frames_dict = self.prep_service.extraction_of_video_frames(
+            file_extension=self.file_extension
         )
-    ]
+        # --- Create inference for each frame
+        inference_results = {}
+        # Looping over each frame and extracting the results
+        with logging_redirect_tqdm(loggers=[logger]):
+            tqdm_desc = "Running inference: "
+            for frame_idx, frame_metadata in tqdm(
+                video_frames_dict.items(), desc=tqdm_desc
+            ):
+                # Running inference on the image
+                (
+                    inference_output_image,
+                    inference_image_results,
+                ) = self.model_service.predict(
+                    image=frame_metadata["frame"],
+                    target_name=self.target_name,
+                )
+                # Create object for saving analysis results
+                frame_results_obj = AnalysisResults(
+                    original_image=frame_metadata["frame"],
+                    output_image=inference_output_image,
+                    inference_results=inference_image_results,
+                )
+                # Save results to main dictionary
+                inference_results[frame_idx] = frame_results_obj
+
+        return inference_results

@@ -133,3 +133,7 @@ dmypy.json
 # Environment files
 .envrc
 *.DS_Store
+*.pt
+
+# --- User-specific
+*.jpg

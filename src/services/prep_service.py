@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import contextlib
 import logging
 import time
 from collections import defaultdict
@@ -40,13 +41,25 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logger.setLevel(logging.INFO)
 
+# --------------------------- ENVIRONMENT VARIABLES ---------------------------
+
+# Amount of time (in seconds) to sleep between frames
+NUMBER_OF_FRAMES = dv.total_number_frames
+
+
+# --------------------------- CLASSES AND FUNCTIONS ---------------------------
+
 
 class DataPreparationService(object):
     """
     Main class object for the 'Data Preparation Service'.
     """
 
-    def __init__(self, video_obj: "VideoData") -> None:
+    def __init__(
+        self,
+        video_obj: "VideoData",
+        number_frames: Optional[int] = dv.total_number_frames,
+    ) -> None:
         """
         Class object for the 'Data Preparation Service'.
 
@@ -54,9 +67,13 @@ class DataPreparationService(object):
         -------------
         video_obj : ``VideData``
             Object for downloading the video.
+
+        number_frames : int, optional
+            Total number of frames to analyze.
         """
         # --- Initializing attributes
         self.video_obj = video_obj
+        self.number_frames = number_frames
 
     def show_params(self):
         """
@@ -107,12 +124,13 @@ class DataPreparationService(object):
         video_frames_dict = defaultdict(dict)
         frame_idx = 0
         start_time = time.time()
+        logger.info(">>> Reading in frames from video ...")
         while True:
             # Extracting frame
             ret, frame = video_cv.read()
             if ret % 10 == 0:
                 logger.info(f"ret: {ret}")
-            if not ret or frame_idx == 500:
+            if not ret or frame_idx == self.number_frames:
                 break
             # Changing colors to RGB
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -125,6 +143,10 @@ class DataPreparationService(object):
         logger.info(f">> Took: {end_time - start_time}")
         # Releasing video object
         video_cv.release()
+        #
+        # --- Removing local video file
+        with contextlib.suppress(Exception):
+            Path(video_local_filepath).unlink()
 
         return video_frames_dict
 
