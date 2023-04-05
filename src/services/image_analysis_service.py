@@ -21,14 +21,9 @@
 # SOFTWARE.
 
 import logging
-from typing import List, Optional, Union
+from typing import Optional, Union
 
-from src.classes.analysis_results import (
-    AnalysisResults,
-    DetectedObject,
-    InferenceResults,
-)
-from src.classes.video_data import VideoData
+from src.classes.analysis_results import AnalysisResults
 from src.classes.yolo_model import YoloModel
 from src.services.prep_service import DataPreparationService
 from src.utils import default_variables as dv
@@ -61,6 +56,7 @@ class AnalyzerService(object):
         self.prep_service = prep_service
         self.model_service = model_service
         self.file_extension = file_extension
+        self.target_name = target_name
 
     def run_image_analysis(self):
         """
@@ -92,35 +88,3 @@ class AnalyzerService(object):
             inference_results[frame_idx] = frame_results_obj
 
         return inference_results
-
-
-def run_image_analysis(video_data: VideoData) -> List[AnalysisResults]:
-    """
-    Method for analyzing video data using a modeling service.
-
-    Parameters
-    --------------
-    video_data : VideoData
-        Video data to be analyzed.
-
-    Returns
-    ------------
-    analysis_results : List[AnalysisResults]
-        List of AnalysisResults objects for each frame.
-        This includes the processed image and inference results
-        from the modeling service.
-
-    """
-    print("Running image analysis...")
-    return [
-        AnalysisResults(
-            output_image={},
-            fps=60,
-            inference_results=InferenceResults(
-                detected_objects=[
-                    DetectedObject(name="car"),
-                    DetectedObject(name="tree"),
-                ]
-            ),
-        )
-    ]
