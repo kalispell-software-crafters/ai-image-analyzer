@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from enum import Enum
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
@@ -33,6 +34,11 @@ from src.utils import default_variables as dv
 from src.utils.default_variables import target_item, video_url
 
 app = FastAPI()
+
+
+class ModelChoices(str, Enum):
+    yolov5 = "yolov5"
+    yolov8 = "yolov8"
 
 
 def get_model_attributes(model_selection: str):
@@ -85,20 +91,23 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.post("/analyze_video")
+@app.post("/analyze_video2")
 async def analyze_video(
     video_url: Optional[str] = video_url,
+    number_of_frames: Optional[int] = dv.total_number_frames,
     target_item: Optional[str] = target_item,
-    model_selection: Optional[str] = "yolov5",
+    model_selection: ModelChoices = ModelChoices.yolov5,
 ) -> AnalyzeVideoResponse:
     try:
         # --- Setting up services
         video_data = VideoData(url=video_url)
         prep_service = DataPreparationService(
             video_obj=video_data,
-            number_frames=dv.total_number_frames,
+            number_frames=number_of_frames,
         )
-        model_service = load_model_service(model_selection=model_selection)
+        model_service = load_model_service(
+            model_selection=model_selection.value
+        )
         analyze_service = AnalyzerService(
             prep_service=prep_service,
             model_service=model_service,
