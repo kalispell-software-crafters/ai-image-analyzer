@@ -20,14 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from src.services.video_service import download_video
+from src.classes.video_data import VideoData
 from src.utils import default_variables as dv
 
 
 def test_download_video():
     mock_url = dv.video_url
 
-    downloaded_video = download_video(mock_url)
+    video_obj = VideoData(url=mock_url)
+    downloaded_video = video_obj.download_stream()
 
     assert downloaded_video is not None
-    assert downloaded_video.url == mock_url
+    assert video_obj.url == mock_url
