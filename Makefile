@@ -150,6 +150,7 @@ clean-test:
 ## Remove files related to pre-trained models
 clean-model-files:
 	find . -name '*.pt' -exec rm -fr {} +
+	find . -name "runs" -type d -exec rm -rf {} + || echo ""
 
 ## Clean left-over images
 clean-images:
