@@ -91,7 +91,7 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.post("/analyze_video2")
+@app.post("/analyze_video")
 async def analyze_video(
     video_url: Optional[str] = video_url,
     number_of_frames: Optional[int] = dv.total_number_frames,
