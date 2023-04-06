@@ -58,6 +58,7 @@ RUN apt-get -y update && \
     bash-completion \
     zsh \
     htop \
+    vim \
     # Installing for Opencv
     ffmpeg \
     libsm6 \

@@ -20,47 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import logging
-
 from src.classes.video_data import VideoData
-
-__author__ = ["Victor Calderon and Travis Craft"]
-__maintainer__ = ["Victor Calderon and Travis Craft"]
-__all__ = []
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-logger.setLevel(logging.INFO)
+from src.utils import default_variables as dv
 
 
-class VideoService(object):
-    """
-    Class object for the Video service.
-    """
+def test_download_video():
+    mock_url = dv.video_url
 
-    def __init__(self, video_dao: "VideoData") -> None:
-        """
-        Class object for the Video Service.
-        """
-        self.video_dao = video_dao
+    video_obj = VideoData(url=mock_url)
+    downloaded_video = video_obj.download_stream()
 
-    def process_video(self):
-        """
-        Method for processing the input video.
-        """
-
-        return
-
-
-def download_video(url: str) -> VideoData:
-    """
-    Function to download a video object.
-    """
-    logger.info(f"Downloading video from the following URL: {url}...")
-    #
-    # Initializing object
-    video_obj = VideoData(url=url)
-    # Downloading video object
-    video_obj.download_stream()
-    #
-    return video_obj
+    assert downloaded_video is not None
+    assert video_obj.url == mock_url
