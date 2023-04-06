@@ -21,12 +21,14 @@
 # SOFTWARE.
 
 import logging
-from typing import Optional, Union
+from collections import Counter
+from typing import Dict, Optional, Union
 
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 from src.classes.analysis_results import AnalysisResults
+from src.classes.analyze_video_response import AnalyzeVideoResponse
 from src.classes.yolo_model import YoloModel
 from src.services.prep_service import DataPreparationService
 from src.utils import default_variables as dv
@@ -61,7 +63,7 @@ class AnalyzerService(object):
         self.file_extension = file_extension
         self.target_name = target_name
 
-    def run_image_analysis(self):
+    def run_image_analysis(self) -> Dict:
         """
         Method for running the image analysis for a given data.
         """
@@ -95,3 +97,32 @@ class AnalyzerService(object):
                 inference_results[frame_idx] = frame_results_obj
 
         return inference_results
+
+    def consolidate_results(
+        self,
+        inference_results: Dict[int, AnalysisResults],
+    ) -> AnalyzeVideoResponse:
+        """
+        Method for consolidating the output results
+
+        Returns
+        ------------
+        analyze_video_response : AnalyzeVideoResponse
+            Object related to the response of the video analysis.
+        """
+        # --- Parsing results
+        target_items_counts = Counter()
+        video_results = [[] for _ in range(len(inference_results))]
+        # Looping over each result
+        for idx, frame_result in inference_results.items():
+            # Saving frame metadata to list
+            video_results[idx] = frame_result
+            # Calculating counts of target instances
+            target_items_counts += Counter(frame_result.inference_results)
+
+        return AnalyzeVideoResponse(
+            # results=video_results,
+            target_item=list(target_items_counts.keys()),
+            video_url=self.prep_service.video_obj.url,
+            summary=target_items_counts,
+        )

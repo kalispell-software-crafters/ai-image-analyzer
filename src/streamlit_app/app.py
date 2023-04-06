@@ -278,7 +278,6 @@ def get_model_attributes(model_selection: str):
         return {"model_family": "yolov8", "model_version": "yolov8n.pt"}
 
 
-# @st.cache_resource
 def load_model_service(model_selection: str) -> "YoloModel":
     """
     Function to load the ``model`` service.

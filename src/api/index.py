@@ -25,11 +25,59 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException
 
 from src.classes.analyze_video_response import AnalyzeVideoResponse
-from src.services.image_analysis_service import run_image_analysis
-from src.services.video_service import download_video
+from src.classes.video_data import VideoData
+from src.classes.yolo_model import YoloModel
+from src.services.image_analysis_service import AnalyzerService
+from src.services.prep_service import DataPreparationService
+from src.utils import default_variables as dv
 from src.utils.default_variables import target_item, video_url
 
 app = FastAPI()
+
+
+def get_model_attributes(model_selection: str):
+    """
+    Function to determine the type of model family and
+    model version to use
+
+    Parameters
+    -------------
+    model_selection : str
+        Type of model to use. Options: [`yolov5`, `yolov8`]
+
+    Returns
+    -----------
+    model_config : dict
+        Dictionary containing the set of configuration to
+        use for the specified model.
+    """
+    if model_selection == "yolov5":
+        return {"model_family": "yolov5", "model_version": "yolov5s"}
+    elif model_selection == "yolov8":
+        return {"model_family": "yolov8", "model_version": "yolov8n.pt"}
+
+
+def load_model_service(model_selection: str) -> "YoloModel":
+    """
+    Function to load the ``model`` service.
+
+    Parameters
+    -------------
+    model_selection : str
+        Type of model to use. Options: [`yolov5`, `yolov8`]
+
+    Returns
+    ----------
+    model_service : ``src.classes.yolo_model.YoloModel``
+        Service corresponding to the initialized Yolo Model
+    """
+    # -- Extracting set of possible classes
+    model_config_dict = get_model_attributes(model_selection=model_selection)
+
+    return YoloModel(
+        model_family=model_config_dict["model_family"],
+        model_version=model_config_dict["model_version"],
+    )
 
 
 @app.get("/")
@@ -41,12 +89,26 @@ async def root():
 async def analyze_video(
     video_url: Optional[str] = video_url,
     target_item: Optional[str] = target_item,
+    model_selection: Optional[str] = "yolov5",
 ) -> AnalyzeVideoResponse:
     try:
-        video_data = download_video(video_url)
-        results = run_image_analysis(video_data)
-        return AnalyzeVideoResponse(
-            video_url=video_url, target_item=target_item, results=results
+        # --- Setting up services
+        video_data = VideoData(url=video_url)
+        prep_service = DataPreparationService(
+            video_obj=video_data,
+            number_frames=dv.total_number_frames,
+        )
+        model_service = load_model_service(model_selection=model_selection)
+        analyze_service = AnalyzerService(
+            prep_service=prep_service,
+            model_service=model_service,
+            target_name=target_item,
+        )
+        # --- Running inference
+        analysis_results = analyze_service.run_image_analysis()
+
+        return analyze_service.consolidate_results(
+            inference_results=analysis_results
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

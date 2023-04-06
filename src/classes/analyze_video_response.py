@@ -20,12 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from pydantic import BaseModel
+from typing import Dict, List
 
-from src.classes.analysis_results import AnalysisResults
+from pydantic import BaseModel
 
 
 class AnalyzeVideoResponse(BaseModel):
-    results: AnalysisResults
-    target_item: str
+    target_item: List
     video_url: str
+    summary: Dict
